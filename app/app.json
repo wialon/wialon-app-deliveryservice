@@ -1,0 +1,54 @@
+{
+	"name": "delivery_service",
+	"url_name": "deliveryservice",
+	"title": "Delivery Service",
+	"description": "Allows calculating the optimal order of points to visit based on geographical location and desired time interval of visits.",
+	"author": {
+		"name": "",
+		"url": "http://gurtam.com"
+	},
+	"licenses": [
+		{
+			"type":" LGPL",
+			"url": "http://www.gnu.org/licenses/lgpl.html"
+		}
+	],
+	"dependencies": {
+		"jquery": "1.8.3"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/wialon/wialon-app-deliveryservice"
+	},
+	"modules": [
+		"SDK",
+		"Маршруты (опционально)"
+	],
+	"params": [
+		"Active SID",
+		"Base URL",
+		"Host URL"
+	],
+	"language": [
+		"en",
+		"ru"
+	],
+	"build_date": "2013-11-19",
+	"version": "1.6",
+	"keywords": [
+		"wialon",
+		"wialon-apps",
+		"delivery service",
+		"optimal path"
+	],
+	"browser": {
+		"ie": "9+",
+		"opera": "10+",
+		"safari": "5+",
+		"chrome": "20+",
+		"firefox": "15+"
+	},
+	"logo": "logo.png",
+	"images_path": "images",
+	"desc_path": "desc"
+}

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<!-- ************************************************************************
+
+	 Apps - WEB applications, developed on the basis of SDK for Wialon Hosting and Wialon Kit.
+
+	 http://apps.wialon.com
+
+	 Copyright:
+     2002-2013 Gurtam, http://gurtam.com
+
+	 License:
+     LGPL: http://www.gnu.org/licenses/lgpl.html
+
+	 Authors:
+     * Alexander Adamovich
+
+	 ************************************************************************ -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
+	<title>Routing</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<meta http-equiv="pragma" content="no-cache"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta names="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	
+	<script type="text/javascript" src="./js/jquery-1.8.3.min.js"></script>	
+	<script src="http://code.jquery.com/ui/1.10.1/jquery-ui.js"></script>
+	<script src="./js/jquery.localisation.js"></script>
+	<script src="./js/underscore-min.js"></script>
+	<script src="./js/print.js"></script>
+	<link rel="stylesheet" type="text/css" href="./css/style.css">
+	<script src="./js/main.js"></script>
+</head>
+
+<body>
+	<div id="block" style="display: none; position: absolute; top: 70px; left: 0px; width: 485px; height: 525px; z-index: 1; background-color: #000; filter: alpha(opacity=35);-moz-opacity: 0.35; opacity: 0.35;"></div>
+	<div id="block2" style="display: none; position: absolute; top: 70px; left: 0px; width: 485px; height: 525px; z-index: 2;"></div>
+	
+	<div style="position: absolute; top: 0px; left: 0px; width: 100%;">
+	  <img style="margin-left: 31px; margin-top: 23px;float:left;" src="img/logo.png"/>
+	  <div id="logo-title" class="title">Delivery service</div>
+	  <div class="clear"></div>
+	</div>
+	
+	<div style="position: absolute; background: #e3e3e3; top: 70px; left: 0px; width: 100%; height: 520px;">
+	  
+	  <div style="position: absolute; top: 0px; left: 0px; max-height: 520px; max-width: 300px; overflow: auto; z-index: 1; background: #C2C2C2; display: none;">
+		<select size="15" id="popup" style="width: 233px;"></select>
+	  </div>
+	  
+	  <div id="main-table-wrapper" class="main-table-wrapper">
+		<table style="width: 480px; height: 500px;">
+		  <tr>
+			<td style="width: 440px; padding-left: 20px; padding-top: 20px; padding-right: 0px">
+			  <table class="main_table">
+				<tr>
+				  <td class="light_font" style="border-bottom: 1px solid #c2c2c2; padding: 5px;">
+					<I id="main-title"></I>
+				  </td>
+				</tr>
+				<tr>
+				  <td class="light_font" style="border-top: 1px solid #FFFFFF; border-bottom: 1px solid #c2c2c2" nowrap valign="middle">
+					<table>
+					  <tr>
+						<td>
+							<img style="cursor: pointer" id="add_point" onclick="add_new_point()" src="img/add.png"/>
+						</td>
+						<td id="add-address-title" style="width: 420px;"></td>
+						<td align="right">
+							<img style="cursor: pointer" id="hide_map" onclick="show_hide_instruments()" src="img/arr-left.png"/>
+						</td>
+					  </tr>
+					</table>
+				  </td>
+				</tr>
+				<tr style="height: 200px;">
+				  <td style="border-top: 1px solid #FFFFFF; border-bottom: 1px solid #c2c2c2">
+					<div style="width: 460px; height: 200px; overflow: auto;">
+						<ul id="points">
+						</ul>
+					</div>
+				  </td>
+				</tr>
+				<tr>
+				  <td style="border-top: 1px solid #FFFFFF; border-bottom: 1px solid #c2c2c2; padding: 0px !important;" class="light_font">		
+					<div style="width: 440px; height: 150px; margin: 5px 0px 5px 0px;">
+						<div>
+							<span id="speed-input-title"></span>
+							<input type="text" class="small_input" id="speed" value="40">
+						</div>
+						<div style="margin: 5px 0px 0px 0px">
+							<input type="checkbox" id="lock_first" checked usage="flag" value="8"/>
+							<span id="lock-first-title"></span>
+							<input type="checkbox" id="lock_last" checked usage="flag" value="16" style="margin-left:10px;white-space:nowrap;"/>
+							<span id="lock-last-title"></span>
+						</div>
+					  <div style="margin: 5px 0px 0px 0px">
+						<input type="checkbox" usage="flag" value="1" checked />
+						<span id="stick-schedule-title"></span>
+					  </div>
+					  <div style="margin: 5px 0px 0px 0px">
+						<input type="checkbox" id="road_lock"/>
+						<span id="snap-roads-title"><span>
+						</div>
+						<div style="margin: 5px 0px 0px 0px; text-align: middle;">
+							<span id="routing-provider-title"></span>
+							<input type="radio" name="provider" value="google" checked/>
+							<span>Google</span>
+							<input type="radio" name="provider"  style="margin-left:10px;white-space:nowrap;" value="yandex" />
+							<span>Yandex</span>
+						</div>
+						<div style="margin: 10px 0px 5px 0px" align="right">
+							<input id="calc-btn" type="button" value="" onclick="optimize_route()"/>
+						</div>
+					</div>
+				  </td>
+				</tr>
+			  </table>
+			</td>
+		  </tr>
+		</table>
+	  </div>
+	  
+	  <div id="map_div" class="map"></div>
+	  <div class="clear"></div>
+	</div>
+	
+	<img id="show_instruments" style="cursor: pointer; display: none; position: absolute; top: 125px; left:10px;" onclick="show_hide_instruments()" src="img/arr-right.png"/>
+	
+	<div style="position: absolute; background: #ededed; top: 565px; left: 0px; width: 100%; min-height: 30px;" class="dark_font">
+		<div style="padding-left: 20px;" id="result"></div>
+		<div style="padding-left: 20px; width: 425px;">
+			<table id="result_control" class="table_padding">
+				<tr>
+					<td>
+						<input type="checkbox" id="show_result" checked>
+					</td>
+					<td style="width: 75%; white-space: nowrap;">
+						<div id="showin-map-title"></div>
+					</td>
+					<td>
+						<input type="button" id="print" style="margin-left: 6px;" value="">
+					</td>
+					<td>
+						<input type="button" id="save" style="margin-left: 6px;" value="">
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+	
+	<!-- Templates -->
+	<script type="text/template" id="new-poin-template">
+	  <li id="row_<%= id %>" mode="map" lat="0" lon="0">
+		<div style="border-bottom: 1px solid #C2C2C2;">
+		  <table class="table_padding light_font">
+			<tr>
+				<td rowspan="1">
+					<img src="img/up-down.png"/>
+				</td>
+				<td id="row_number_<%= id %>"><%= rows_count %>.</td>
+				<td id="delivery-address-title" nowrap></td>
+				<td style="width: 440px; padding-right: 5px">
+					<input style="width: 220px;" type="text" id="edit_<%= id %>">
+				</td>
+				<td>
+					<div usage="map" id="<%= id %>" class="map_div map_div_selected" title=""></div>
+				</td>
+				<td>
+					<div usage="zone" id="<%= id %>" class="zone_div" title=""></div>
+				</td>
+				<td>
+					<div usage="poi" id="<%= id %>" class="poi_div" title=""></div>
+				</td>
+				<td>
+					<div id="remove_<%= id %>" class="remove_div" title=""></div>
+				</td>
+			</tr>
+			<tr id="row_<%= id %>">
+			  <td>&nbsp</td>
+			  <td nowrap colspan="6">
+				<span id="deliver-from-title"></span>
+				<select id="from_<%= id %>">
+					<option value="0">00:00</option>
+					<option value="15">00:15</option>
+					<option value="30">00:30</option>
+					<option value="45">00:45</option>
+					<option value="60">01:00</option>
+					<option value="75">01:15</option>
+					<option value="90">01:30</option>
+					<option value="105">01:45</option>
+					<option value="120">02:00</option>
+					<option value="135">02:15</option>
+					<option value="150">02:30</option>
+					<option value="165">02:45</option>
+					<option value="180">03:00</option>
+					<option value="195">03:15</option>
+					<option value="210">03:30</option>
+					<option value="225">03:45</option>
+					<option value="240">04:00</option>
+					<option value="255">04:15</option>
+					<option value="270">04:30</option>
+					<option value="285">04:45</option>
+					<option value="300">05:00</option>
+					<option value="315">05:15</option>
+					<option value="330">05:30</option>
+					<option value="345">05:45</option>
+					<option value="360">06:00</option>
+					<option value="375">06:15</option>
+					<option value="390">06:30</option>
+					<option value="405">06:45</option>
+					<option value="420">07:00</option>
+					<option value="435">07:15</option>
+					<option value="450">07:30</option>
+					<option value="465">07:45</option>
+					<option value="480">08:00</option>
+					<option value="495">08:15</option>
+					<option value="510">08:30</option>
+					<option value="525">08:45</option>
+					<option value="540">09:00</option>
+					<option value="555">09:15</option>
+					<option value="570">09:30</option>
+					<option value="585">09:45</option>
+					<option value="600">10:00</option>
+					<option value="615">10:15</option>
+					<option value="630">10:30</option>
+					<option value="645">10:45</option>
+					<option value="660">11:00</option>
+					<option value="675">11:15</option>
+					<option value="690">11:30</option>
+					<option value="705">11:45</option>
+					<option value="720">12:00</option>
+					<option value="735">12:15</option>
+					<option value="750">12:30</option>
+					<option value="765">12:45</option>
+					<option value="780">13:00</option>
+					<option value="795">13:15</option>
+					<option value="810">13:30</option>
+					<option value="825">13:45</option>
+					<option value="840">14:00</option>
+					<option value="855">14:15</option>
+					<option value="870">14:30</option>
+					<option value="885">14:45</option>
+					<option value="900">15:00</option>
+					<option value="915">15:15</option>
+					<option value="930">15:30</option>
+					<option value="945">15:45</option>
+					<option value="960">16:00</option>
+					<option value="975">16:15</option>
+					<option value="990">16:30</option>
+					<option value="1005">16:45</option>
+					<option value="1020">17:00</option>
+					<option value="1035">17:15</option>
+					<option value="1050">17:30</option>
+					<option value="1065">17:45</option>
+					<option value="1080">18:00</option>
+					<option value="1095">18:15</option>
+					<option value="1110">18:30</option>
+					<option value="1125">18:45</option>
+					<option value="1140">19:00</option>
+					<option value="1155">19:15</option>
+					<option value="1170">19:30</option>
+					<option value="1185">19:45</option>
+					<option value="1200">20:00</option>
+					<option value="1215">20:15</option>
+					<option value="1230">20:30</option>
+					<option value="1245">20:45</option>
+					<option value="1260">21:00</option>
+					<option value="1275">21:15</option>
+					<option value="1290">21:30</option>
+					<option value="1305">21:45</option>
+					<option value="1320">22:00</option>
+					<option value="1335">22:15</option>
+					<option value="1350">22:30</option>
+					<option value="1365">22:45</option>
+					<option value="1380">23:00</option>
+					<option value="1395">23:15</option>
+					<option value="1410">23:30</option>
+					<option value="1425">23:45</option>
+				</select>
+				<select id="fromday_<%= id %>" selected="true">
+					<option class="mo-day" value="0"></option>
+					<option class="tu-day" value="1"></option>
+					<option class="we-day" value="2"></option>
+					<option class="th-day" value="3"></option>
+					<option class="fr-day" value="4"></option>
+					<option class="sa-day" value="5"></option>
+					<option class="su-day" value="6"></option>
+				</select>
+				<span id="delivery-to-title"></span>
+				<select id="to_<%= id %>" selected="true">
+					<option value="0">00:00</option>
+					<option value="15">00:15</option>
+					<option value="30">00:30</option>
+					<option value="45">00:45</option>
+					<option value="60">01:00</option>
+					<option value="75">01:15</option>
+					<option value="90">01:30</option>
+					<option value="105">01:45</option>
+					<option value="120">02:00</option>
+					<option value="135">02:15</option>
+					<option value="150">02:30</option>
+					<option value="165">02:45</option>
+					<option value="180">03:00</option>
+					<option value="195">03:15</option>
+					<option value="210">03:30</option>
+					<option value="225">03:45</option>
+					<option value="240">04:00</option>
+					<option value="255">04:15</option>
+					<option value="270">04:30</option>
+					<option value="285">04:45</option>
+					<option value="300">05:00</option>
+					<option value="315">05:15</option>
+					<option value="330">05:30</option>
+					<option value="345">05:45</option>
+					<option value="360">06:00</option>
+					<option value="375">06:15</option>
+					<option value="390">06:30</option>
+					<option value="405">06:45</option>
+					<option value="420">07:00</option>
+					<option value="435">07:15</option>
+					<option value="450">07:30</option>
+					<option value="465">07:45</option>
+					<option value="480">08:00</option>
+					<option value="495">08:15</option>
+					<option value="510">08:30</option>
+					<option value="525">08:45</option>
+					<option value="540">09:00</option>
+					<option value="555">09:15</option>
+					<option value="570">09:30</option>
+					<option value="585">09:45</option>
+					<option value="600">10:00</option>
+					<option value="615">10:15</option>
+					<option value="630">10:30</option>
+					<option value="645">10:45</option>
+					<option value="660">11:00</option>
+					<option value="675">11:15</option>
+					<option value="690">11:30</option>
+					<option value="705">11:45</option>
+					<option value="720">12:00</option>
+					<option value="735">12:15</option>
+					<option value="750">12:30</option>
+					<option value="765">12:45</option>
+					<option value="780">13:00</option>
+					<option value="795">13:15</option>
+					<option value="810">13:30</option>
+					<option value="825">13:45</option>
+					<option value="840">14:00</option>
+					<option value="855">14:15</option>
+					<option value="870">14:30</option>
+					<option value="885">14:45</option>
+					<option value="900">15:00</option>
+					<option value="915">15:15</option>
+					<option value="930">15:30</option>
+					<option value="945">15:45</option>
+					<option value="960">16:00</option>
+					<option value="975">16:15</option>
+					<option value="990">16:30</option>
+					<option value="1005">16:45</option>
+					<option value="1020">17:00</option>
+					<option value="1035">17:15</option>
+					<option value="1050">17:30</option>
+					<option value="1065">17:45</option>
+					<option value="1080">18:00</option>
+					<option value="1095">18:15</option>
+					<option value="1110">18:30</option>
+					<option value="1125">18:45</option>
+					<option value="1140">19:00</option>
+					<option value="1155">19:15</option>
+					<option value="1170">19:30</option>
+					<option value="1185">19:45</option>
+					<option value="1200">20:00</option>
+					<option value="1215">20:15</option>
+					<option value="1230">20:30</option>
+					<option value="1245">20:45</option>
+					<option value="1260">21:00</option>
+					<option value="1275">21:15</option>
+					<option value="1290">21:30</option>
+					<option value="1305">21:45</option>
+					<option value="1320">22:00</option>
+					<option value="1335">22:15</option>
+					<option value="1350">22:30</option>
+					<option value="1365">22:45</option>
+					<option value="1380">23:00</option>
+					<option value="1395">23:15</option>
+					<option value="1410">23:30</option>
+					<option value="1425">23:45</option>
+				</select>
+				<select id="today_<%= id %>" selected="true">
+					<option class="mo-day" value="0"></option>
+					<option class="tu-day" value="1"></option>
+					<option class="we-day" value="2"></option>
+					<option class="th-day" value="3"></option>
+					<option class="fr-day" value="4"></option>
+					<option class="sa-day" value="5"></option>
+					<option class="su-day" value="6"></option>
+				</select>
+			  </td>
+			</tr>
+			<tr>
+			  <td>&nbsp</td>
+			  <td nowrap colspan="6">
+				<span id="stay-duration-title"></span>
+				<input id="wait_<%= id %>" type="text" class="small_input" id="duration" value="5">
+			  </td>
+			</tr>
+		  </table>
+		</div>
+	  </li>
+	</script>
+	
+	<script type="text/template" id="table-result-template">
+	  <table class="result_table">
+		<thead>
+		  <tr>
+			<td></td>
+			<td id="address-col-name" class="light_font"></td>
+			<td id="time-col-name" class="light_font"></td>
+			<td id="interval-col-name" class="light_font"></td>
+			<td id="distance-col-name" class="light_font"></td>
+		  </tr>
+		</thead>
+		<tbody id="result-tbody">
+		</tbody>
+		<tfoot>
+		  <th id="total-col-name" colspan="4" align="right"></th>
+		  <th id="total-distance"></th>
+		</tfoot>
+	  </table>
+	</script>
+
+	<script type="text/template" id="row-result-template">
+	  <tr>
+		<td class="light_font"><%= index %>.</td>
+		<td class="dark_font clickable_cell" onclick="center_map(<%= lat %>, <%= lon %>)">
+			<%= address %>
+		</td>
+		<td class="dark_font"><%= time %></td>
+		<td class="dark_font" nowrap><%= ifrom %> - <%= ito %></td>
+		<td class="dark_font" nowrap><%= distance %></td>
+	  </tr>
+	</script>
+	<!-- End templates -->
+	
+  </body>
+</html>

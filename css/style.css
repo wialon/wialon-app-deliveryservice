@@ -1,0 +1,164 @@
+* {
+	margin: 0px;
+	padding: 0px;
+	font-family: Arial;
+	font-size: 12px;
+}
+
+.clear {
+	clear: both;
+}
+
+.title {
+	float: left;
+	margin-left: 15px; 
+	margin-top: 30px;
+	font-size: 22px;
+	color: #797c80;
+}
+
+body input[type]:hover {
+	border: 1px solid #066397;
+}
+body input[type=text] {
+	border: 1px solid #B4B4B4;
+	color: #404040;
+}
+body input[type=button] {
+	border: 1px solid #B4B4B4;
+	color: #066397;
+	padding: 1px 15px 1px 15px;
+	-moz-border-radius: 3px;
+	border-radius: 3px 3px;
+	background: transparent url(../img/input_text_bg.png) repeat-x;
+}
+
+body input[type=checkbox] {
+	vertical-align: middle;
+	border: none;
+}
+
+body input[type=checkbox]:hover {
+	border: none;
+}
+
+body input[type=radio] {
+	vertical-align: middle;
+	border: none;
+}
+
+body input[type=radio]:hover {
+	border: none;
+}
+
+body input[type=checkbox]:hover {
+	vertical-align: middle;
+}
+
+body select {
+	border: 1px solid #B4B4B4;
+	font-size: 12px;
+	padding: 1px 1px 1px 5px;
+	-moz-border-radius: 3px;
+	border-radius: 3px 3px;
+	background-color: #FFFFFF;
+	color: #404040;
+}
+
+.light_font {
+	color: #717171;
+}
+
+.dark_font {
+	color: #404040;
+}
+
+.small_input {
+	width: 50px;
+}
+
+.main_table {
+	border-spacing: 0px;
+}
+
+.table_padding {
+	margin: 3px 0px 0px 5px;
+}
+
+.main-table-wrapper {
+	float:left;
+	display: block;		
+	margin-right: 20px;
+}
+
+.map {
+	height: 480px;
+	margin-right: 20px;
+}
+
+.map_div {
+	width: 16px;
+	height: 16px;
+	background: url(../img/map.png);
+	cursor: pointer;
+}
+.map_div:hover {
+	background: url(../img/map-hover.png);
+}
+.map_div_selected {
+	background: url(../img/map-hover_sel.png) !important;
+}
+.zone_div {
+	width: 16px;
+	height: 16px;
+	background: url(../img/zone.png);
+	cursor: pointer;
+}
+.zone_div:hover {
+	background: url(../img/zone-hover.png);
+}
+.zone_div_selected {
+	background: url(../img/zone-hover_sel.png) !important;
+}
+.poi_div {
+	width: 16px;
+	height: 16px;
+	background: url(../img/POI.png);
+	cursor: pointer;
+}
+.poi_div:hover {
+	background: url(../img/POI-hover.png);
+}
+.poi_div_selected {
+	background: url(../img/POI-hover_sel.png) !important;
+}
+.remove_div {
+	width: 16px;
+	height: 16px;
+	background: url(../img/del.png);
+	cursor: pointer;
+	background-position: center center;
+	background-repeat: no-repeat;
+}
+.remove_div:hover {
+	background: url(../img/del-hover.png);
+	background-position: center center;
+	background-repeat: no-repeat;
+}
+.result_table td {
+	padding: 5px;
+}
+.clickable_cell:hover {
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.ui-state-highlight { 
+	height: 100px; 
+	line-height: 1.2em; 
+	background-color: #ccc;
+}
+
+ul {
+	list-style-type: none;
+}
