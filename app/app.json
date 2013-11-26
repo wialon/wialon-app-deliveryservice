@@ -4,13 +4,13 @@
 	"title": "Delivery Service",
 	"description": "Allows calculating the optimal order of points to visit based on geographical location and desired time interval of visits.",
 	"author": {
-		"name": "",
+		"name": "Alexander Adamovich",
 		"url": "http://gurtam.com"
 	},
 	"licenses": [
 		{
-			"type":" LGPL",
-			"url": "http://www.gnu.org/licenses/lgpl.html"
+			"type":" MIT",
+			"url": "https://github.com/wialon/wialon-app-deliveryservice/blob/master/LICENSE-MIT"
 		}
 	],
 	"dependencies": {
@@ -33,7 +33,7 @@
 		"en",
 		"ru"
 	],
-	"build_date": "2013-11-19",
+	"build_date": "2013-11-26",
 	"version": "1.6",
 	"keywords": [
 		"wialon",
