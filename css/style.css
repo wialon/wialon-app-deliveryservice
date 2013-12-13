@@ -3,6 +3,7 @@
 	padding: 0px;
 	font-family: Arial;
 	font-size: 12px;
+	border: 0;
 }
 
 .clear {
@@ -87,7 +88,7 @@ body select {
 
 .main-table-wrapper {
 	float:left;
-	display: block;		
+	display: block;
 	margin-right: 20px;
 }
 

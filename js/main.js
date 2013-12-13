@@ -2,7 +2,7 @@
 var callbacks = {};
 ///
 var provider = null;
-/// Google map
+/// map object
 var map = null;
 /// Input timer
 var input_timer = null;
@@ -82,25 +82,6 @@ function stime (time) {
 	var minute = Math.floor((time % 3600) / 60);
 	return wialon.util.String.sprintf("%s %s %s %s", add_zero(hour), $.localise.tr("h"), add_zero(minute), $.localise.tr("m"));
 }
-/// Create Gurtam map
-function create_gurtam_map() {
-	function webgisMapType() {}
-	webgisMapType.prototype.tileSize = new google.maps.Size(256, 256);
-	webgisMapType.prototype.maxZoom = 17;
-	webgisMapType.prototype.minZoom = 4;
-	webgisMapType.prototype.name = "Gurtam";
-	webgisMapType.prototype.alt = "Gurtam";
-	webgisMapType.prototype.getTile = function(coord, zoom, ownerDocument) {
-		var url = wialon.core.Session.getInstance().getBaseGisUrl()  + "/gis_render/" + coord.x + "_" + coord.y + "_" + (this.maxZoom - zoom) + "/tile.png";
-		var img = ownerDocument.createElement("IMG");
-		img.src = url;
-		img.style.width = this.tileSize.width + "px";
-		img.style.height = this.tileSize.height + "px";
-		img.style.border = "0px";
-		return img;
-	};
-	map.mapTypes.set("gurtam_maps", new webgisMapType());
-}
 /// Load script
 function load_script(src, callback) {
 	var script = document.createElement("script");
@@ -108,52 +89,60 @@ function load_script(src, callback) {
 	script.setAttribute("charset","UTF-8");
 	script.setAttribute("src", src);
 	if (callback && typeof callback == "function") {
-		var id = wrap_callback(callback);
+		wrap_callback(callback);
 		if (ie())
 			script.onreadystatechange = function () {
 				if (this.readyState == 'complete' || this.readyState == 'loaded')
 					callback();
-			}
+			};
 		else
 			script.setAttribute("onLoad", "exec_callback(" + wrap_callback(callback) + ")");
 	}
 	document.getElementsByTagName("head")[0].appendChild(script);
 }
-/// Center map
-function center_map(lat, lon) {
-	if (map) {
-		map.setCenter(new google.maps.LatLng(lat, lon));
-	}
-}
 /// Resolve coordinates
-function rgeocoding(coords, id) {
-	var geocoder = new google.maps.Geocoder();
-	geocoder.geocode({"latLng": coords, region: LANG.toUpperCase()}, qx.lang.Function.bind(function(id, results, status) {
-		if (status == google.maps.GeocoderStatus.OK) {
-			var html = "";
-			for (var i = 0; i < results.length; i++) {
-				html += "<option data='0' id='" + id + "' lat='" + results[i].geometry.location.lat() + "' lon='" + results[i].geometry.location.lng() + "'>";
-				html += results[i].formatted_address;
-				html += "</option>";						
-			}
-			show_popup(html, id);
+function rgeocoding(lonlat, id) {
+	if (!ymaps || !("geocode" in ymaps)) {
+		return;
+	}
+	var geocoder = ymaps.geocode([lonlat.lat,lonlat.lng]);
+	geocoder.then( function(res){
+		var count = Math.min(res.metaData.geocoder.found, res.metaData.geocoder.results);
+		var html = "";
+		for(var i=0; i<count; i++){
+			var obj = res.geoObjects.get(i);
+			var coord = obj.geometry.getCoordinates();
+			html += "<option data='0' id='" + id + "' lat='" +coord[0]+ "' lon='" +coord[1]+ "'>";
+			html += obj.properties.get('text');
+			html += "</option>";
 		}
-	}, this, id));
+		show_popup(html, id);
+	}, function(){
+		show_popup("", id);
+	});
 }
 /// Resolve address
 function geocoding(address, id) {
-	var geocoder = new google.maps.Geocoder();
-	geocoder.geocode({"address": address, region: LANG.toUpperCase()}, qx.lang.Function.bind(function(id, results, status) {
-		if (status == google.maps.GeocoderStatus.OK) {
-			var html = "";
-			for (var i = 0; i < results.length; i++) {
-				html += "<option data='0' id='" + id + "' lat='" + results[i].geometry.location.lat() + "' lon='" + results[i].geometry.location.lng() + "'>";
-				html += results[i].formatted_address;
-				html += "</option>";						
-			}
-			show_popup(html, id);
+	if (!ymaps || !("geocode" in ymaps)) {
+		return;
+	}
+	var geocoder = ymaps.geocode(address,{'lang':'en-US'});
+	geocoder.then( function(res){
+		var count = Math.min(res.metaData.geocoder.found, res.metaData.geocoder.results);
+		console.log(res.metaData.geocoder);
+		var html = "";
+		for(var i=0; i<count; i++){
+			var obj = res.geoObjects.get(i);
+			var coord = obj.geometry.getCoordinates();
+			html += "<option data='0' id='" + id + "' lat='" +coord[0]+ "' lon='" +coord[1]+ "'>";
+			html += obj.properties.get('text');
+			html += "</option>";
 		}
-	}, this, id));
+		show_popup(html, id);
+
+	}, function(){
+		show_popup("", id);
+	});
 }
 /// Fetch poi
 function process_poi(name, id) {
@@ -171,26 +160,26 @@ function process_poi(name, id) {
 		return;
 	}
 	// match POI
-	var result = [];
-	for (var i = 0; i < pois_hash.length; i++) {
+	var result = [], i = 0;
+	for (i = 0; i < pois_hash.length; i++) {
 		var pois = pois_hash[i].getPois();
 		if (!pois)
 			continue;
 		for (var j in pois) {
 			if (wialon.util.Helper.wildcardCompare(pois[j].n, name, true))
-				result.push({name: pois[j].n, value: pois[j].r, lat: pois[j].y, lon: pois[j].x})
+				result.push({name: pois[j].n, value: pois[j].r, lat: pois[j].y, lon: pois[j].x});
 		}
 	}
 	// order POI by name
-	wialon.util.Helper.sortItems(result, function(a) {return a.name});
+	wialon.util.Helper.sortItems(result, function(a) {return a.name;});
 	// output
 	var html = "";
-	for (var i = 0; i < result.length; i++) {
+	for (i = 0; i < result.length; i++) {
 		html += "<option data='" + result[i].value + "' id='" + id + "' lat='" + result[i].lat + "' lon='" + result[i].lon + "'>";
 		html += result[i].name;
-		html += "</option>";						
+		html += "</option>";
 	}
-	show_popup(html, id);			
+	show_popup(html, id);
 }
 /// Fetch geozones
 function process_geozone(name, id) {
@@ -208,51 +197,50 @@ function process_geozone(name, id) {
 		return;
 	}
 	// match zone
-	var result = [];
-	for (var i = 0; i < geozones_hash.length; i++) {
+	var result = [], i = 0;
+	for (i = 0; i < geozones_hash.length; i++) {
 		var zones = geozones_hash[i].getZones();
 		if (!zones)
 			continue;
 		for (var j in zones) {
 			if (wialon.util.Helper.wildcardCompare(zones[j].n, name, true))
-				result.push({name: zones[j].n, value: geozones_hash[i].getId() + "_" + j, lat: zones[j].b.cen_y, lon: zones[j].b.cen_x})
+				result.push({name: zones[j].n, value: geozones_hash[i].getId() + "_" + j, lat: zones[j].b.cen_y, lon: zones[j].b.cen_x});
 		}
 	}
 	// order zones by name
-	wialon.util.Helper.sortItems(result, function(a) {return a.name});
+	wialon.util.Helper.sortItems(result, function(a) {return a.name;});
 	// output
 	var html = "";
-	for (var i = 0; i < result.length; i++) {
+	for (i = 0; i < result.length; i++) {
 		html += "<option data='" + result[i].value + "' id='" + id + "' lat='" + result[i].lat + "' lon='" + result[i].lon + "'>";
 		html += result[i].name;
-		html += "</option>";						
+		html += "</option>";
 	}
-	show_popup(html, id);			
+	show_popup(html, id);
 }
 /// Show popup menu
 function show_popup(html, id) {
-	var top = $("#edit_" + id).position().top + 20;
-	var left = $("#edit_" + id).position().left;
-	$("#popup").html(html);
-	var size = $("#popup option").size();
-	if (size > 20)
-		size = 20;
-	else if (size < 2)
-		size = 2;
-	$("#popup").attr("size", size).parent().css("top", top + "px").css("left", left + "px").show();
-}		
+	if ( html === "" ) {
+		$("#popup").parent().hide();
+	} else {
+		var top = $("#edit_" + id).position().top + 20;
+		var left = $("#edit_" + id).position().left;
+		$("#popup").html(html);
+		var size = $("#popup option").size();
+		if (size > 20)
+			size = 20;
+		else if (size < 2)
+			size = 2;
+		$("#popup").attr("size", size).parent().css("top", top + "px").css("left", left + "px").show();
+	}
+}
 /// Login result
 function login(code) {
 	if (code) {
-		alert("Ошибка подключения к серверу.");
+		alert($.localise.tr("Unable to connect to the server."));
 		return;
-	}		
-
-	load_script("https://www.google.com/jsapi?language="+LANG, function() {
-		if (typeof google != "undefined") {
-			google.load("maps", "3", {callback: init_google, other_params: "sensor=true&language="+LANG});
-		}
-	});
+	}
+	init_map();
 }
 /// Init SDK
 function init_sdk() {
@@ -261,54 +249,44 @@ function init_sdk() {
 		url = get_html_var("hostUrl");
 	if (!url)
 		return;
-	wialon.core.Session.getInstance().initSession(url, undefined, 0x800);
+	wialon.core.Session.getInstance().initSession(url);
 	wialon.core.Session.getInstance().duplicate(get_html_var("sid"), "", true, login);
 }
-/// Init google maps api
-function init_google() {
-	// init Gurtam map layer
-	var mapOptions = {zoom: 5, center: new google.maps.LatLng(50, 32), 
-					  mapTypeId: google.maps.MapTypeId.ROADMAP,
-					  mapTypeControlOptions: {
-						  mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.TERRAIN, "gurtam_maps"],
-						  style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
-					  },
-					  navigationControl: true,
-					  scaleControl: true,
-					  navigationControlOptions: {style: google.maps.NavigationControlStyle.DEFAULT},
-					  disableDoubleClickZoom: true
-					 };
-	map = new google.maps.Map(document.getElementById("map_div"), mapOptions);
-	create_gurtam_map();
-
-	var google_img = null;
-	google.maps.event.addListener(map, "maptypeid_changed", function (e) {
-		var type = map.getMapTypeId();
-		if (google_img === null) {
-			google_img = $("img[src='https://maps.gstatic.com/mapfiles/google_white.png']");
-		}
-		if (type === "gurtam_maps") {
-			$(google_img).hide();
-		} else {
-			$(google_img).show();
-		}
+/// Init map
+function init_map() {
+	var gis_url = wialon.core.Session.getInstance().getBaseGisUrl();
+	var gurtam = L.tileLayer.webGis(gis_url,{ attribution: "Gurtam Maps",minZoom: 4});
+	var osm = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'});
+	var layers = {
+		"Gurtam Maps": gurtam,
+		"OpenStreetMap": osm
+	};
+	map = L.map("map_div", {
+		center: [50,32],
+		zoom: 5,
+		layers: [ gurtam ],
+		crs: L.CRS.EPSG3395
 	});
-
-	google.maps.event.addListener(map, "dblclick", function(e) {
+	L.control.layers(layers).addTo(map);
+	map.invalidateSize();
+	map.doubleClickZoom.disable();
+	map.on('dblclick', function(e){
 		if ($("#main-table-wrapper").is(":visible")) {
 			var id = last_focused;
 			if (!id)
 				return;
-			var arr = id.split("_")
+			var arr = id.split("_");
 			if (arr.length != 2 || arr[0] != "edit" || $("#row_" + arr[1]).attr("mode") != "map")
 				return;
-			rgeocoding(e.latLng, arr[1]);
+			rgeocoding(e.latlng, arr[1]);
 		}
 	});
-
-    google.maps.event.trigger(map, 'resize');
 	
-	load_script("http://api-maps.yandex.ru/2.0-stable/?load=package.full&lang=ru-RU", function () {
+	var locale = 'ru-RU';
+	if (LANG == 'en') {
+		locale = 'en-US';
+	}
+	load_script("http://api-maps.yandex.ru/2.0-stable/?load=package.full&lang=" + locale, function () {
 		if (typeof ymaps === "undefined") {
 			alert($.localise.tr("Error when working with Yandex Maps."));
 		}
@@ -336,7 +314,7 @@ function add_new_point() {
 	var id = (new Date()).getTime();
 	var rows_count = $("#points [id^=row_number_]").size();
 	var template = _.template($("#new-poin-template").html());
-	var html = template({id: id, rows_count: (++rows_count)})
+	var html = template({id: id, rows_count: (++rows_count)});
 	$("#points").append(html);
 	$("#to_" + id).val("1425");
 	
@@ -418,7 +396,7 @@ function add_new_point() {
 		// assign a new class
 		$(this).addClass(mode + "_div_selected");
 		// set row mode
-		$("#row_" + id).attr("mode", mode);	
+		$("#row_" + id).attr("mode", mode);
 		// reset input field
 		$("#edit_" + id).val("");
 		// check
@@ -440,47 +418,44 @@ function check_input(id) {
 }
 /// Update map path
 function update_map() {
-	var coords = [];
 	if (path) {
-		path.setMap(null);
-		delete path;
+		map.removeLayer(path);
+		//delete path;
 		path = null;
 	}
 	for (var i = 0; i < markers.length; i++)
-		markers[i].setMap(null);
+		map.removeLayer(markers[i]);
 	markers = [];
 	var coords = [];
-	var bounds = new google.maps.LatLngBounds();
+	var bounds = new L.LatLngBounds();
 	$("[id^=edit_]").each(function() {
 		var lat = $(this).attr("lat");
 		var lon = $(this).attr("lon");
 		if (isNaN(lat) || isNaN(lon))
 			return;
 		var id = $(this).attr("id").split("_")[1];
-		var pt = new google.maps.LatLng(lat, lon);
+		var pt = L.latLng(lat, lon);
 		coords.push(pt);
 		bounds.extend(pt);
-		var marker = new google.maps.Marker({
-			position: pt,
-			map: map,
-			title: $(this).val() + "\n" + $("#from_" + id + " option:selected").html() + " " + $("#fromday_" + id + " option:selected").html() + " " + $("#to_" + id + " option:selected").html() + " " + $("#today_" + id + " option:selected").html()
-		});
+		//title: $(this).val() + "\n" + $("#from_" + id + " option:selected").html() + " " + $("#fromday_" + id + " option:selected").html() + " " + $("#to_" + id + " option:selected").html() + " " + $("#today_" + id + " option:selected").html()
+		var marker = L.marker(pt).addTo(map);
 		$("#from_" + id).attr("marker", markers.length);
 		$("#to_" + id).attr("marker", markers.length);
 		$("#fromday_" + id).attr("marker", markers.length);
 		$("#today_" + id).attr("marker", markers.length);
 		markers.push(marker);
 	});
-	path = new google.maps.Polyline({path: coords, strokeColor: "#FFF", strokeOpacity: 1.0, strokeWeight: 2});
-	path.setMap(map);
+	path = L.polyline(coords, {
+		color: "#FFF",
+		opacity: 1.0,
+		weight: 2
+	}).addTo(map);
 	if (!coords.length)
 		return;
 	else if (coords.length == 1) {
-		map.setCenter(coords[0]);
 		return;
-	}			
-	map.fitBounds(bounds);
-	map.panToBounds(bounds);
+	}
+	map.fitBounds(bounds, {padding:[60,60]});
 }
 /// Optimize route
 function optimize_route() {
@@ -489,7 +464,7 @@ function optimize_route() {
 	$("[id^=edit_]").each(function() {
 		var lat = $(this).attr("lat");
 		var lon = $(this).attr("lon");
-		var pt = new google.maps.LatLng(lat, lon);
+		var pt = L.latLng(lat, lon);
 		coords.push(pt);
 	});
 	if (coords.length < 2)
@@ -503,9 +478,9 @@ function optimize_route() {
 			if (isNaN(lat) || isNaN(lon))
 				return;
 			var id = $(this).attr("id").split("_")[1];
-			var from = parseInt($("#fromday_" + id).val()) * 1440 + parseInt($("#from_" + id).val());
-			var to = parseInt($("#today_" + id).val()) * 1440 + parseInt($("#to_" + id).val());
-			var twait = parseInt($("#wait_" + id).val());
+			var from = parseInt($("#fromday_" + id).val(), 10) * 1440 + parseInt($("#from_" + id).val(), 10);
+			var to = parseInt($("#today_" + id).val(), 10) * 1440 + parseInt($("#to_" + id).val(), 10);
+			var twait = parseInt($("#wait_" + id).val(), 10);
 			schedules.push({from: from, to: to, waitInterval: twait});
 		});
 		var flags = 2;
@@ -526,7 +501,7 @@ function optimize_route() {
 	}));
 }
 
-function humanize_distance (dist) {			
+function humanize_distance (dist) {
 	var km = Math.floor(dist / 1000);
 	var m = Math.floor((dist % 1000));
 	if (km > 0) {
@@ -538,9 +513,9 @@ function humanize_distance (dist) {
 /// Optimize route
 function show_optimized_path(data) {
 	block_screen(false);
-	if (ordered_path) {
-		ordered_path.setMap(null);
-		delete ordered_path;
+	if (ordered_path !== null) {
+		map.removeLayer(ordered_path);
+		//delete ordered_path;
 		ordered_path = null;
 	}
 	var coords = [];
@@ -549,44 +524,43 @@ function show_optimized_path(data) {
 		return;
 	}
 
-	var inputs = $("[id^=edit_]");
+	var inputs = $("[id^=edit_]"), i = 0;
 	var result_template = _.template($("#table-result-template").html());
 	var html = result_template({});
 	$("#result").html(html);
 	
 	var row_template = _.template($("#row-result-template").html());
 	var prev_point = 0, platlon = null; var dtotal = 0; ycoords = [];
-	for (var i = 0; i < data.order.length; i++) {
+	for (i = 0; i < data.order.length; i++) {
 		var id = $(inputs.get(data.order[i].id)).attr("id").split("_")[1];
 		var lat = $(inputs.get(data.order[i].id)).attr("lat");
 		var lon = $(inputs.get(data.order[i].id)).attr("lon");
-		var pt = new google.maps.LatLng(lat, lon);
+		var pt = L.latLng(lat, lon);
 		coords.push(pt);
 		
 		var distance = null;
-		if (provider === "google" && i && directions_data.directions[prev_point][data.order[i].id]) {
+		/*if (provider === "google" && i && directions_data.directions[prev_point][data.order[i].id]) {
 			directions_data.renderers.push(new google.maps.DirectionsRenderer({
-				markerOptions: {visible: false}, 
+				markerOptions: {visible: false},
 				polylineOptions: {
-					strokeColor: "#0000FF", 
-					strokeWeight: 6, 
-					strokeOpacity: 0.7}, 
+					strokeColor: "#0000FF",
+					strokeWeight: 6,
+					strokeOpacity: 0.7},
 				directions: directions_data.directions[prev_point][data.order[i].id]
 			}));
 			var ttemp = directions_data.directions[prev_point][data.order[i].id].routes[0].legs[0].distance.value;
 			dtotal += ttemp;
 			distance = humanize_distance(ttemp);
-		} else if (provider === "yandex" && i && directions_data.directions[prev_point][data.order[i].id]) {
+		} else*/ if (provider === "yandex" && i && directions_data.directions[prev_point][data.order[i].id]) {
 			var ltemp = 0;
 			var tdata = directions_data.directions[prev_point][data.order[i].id];
 			if (platlon !== null) {
 				for (var j=0, len=tdata.length; j<len; j++) {
-					ycoords.push(new google.maps.LatLng(tdata[j][0], tdata[j][1]));
+					ycoords.push(L.latLng(tdata[j][0], tdata[j][1]));
 					if (j > 0) {
-						ltemp += wialon.util.Geometry.getDistance(tdata[j][0], tdata[j][1], 
-																  tdata[j-1][0], tdata[j-1][1]);
-						
-					}					
+						ltemp += wialon.util.Geometry.getDistance(tdata[j][0], tdata[j][1],
+																tdata[j-1][0], tdata[j-1][1]);
+					}
 				}
 				dtotal += ltemp;
 				distance = humanize_distance(ltemp);
@@ -602,7 +576,7 @@ function show_optimized_path(data) {
 			} else {
 				distance = " --- ";
 			}
-		} 
+		}
 		
 		$("#result-tbody").append(row_template({
 			index: (i+1),
@@ -614,49 +588,32 @@ function show_optimized_path(data) {
 			distance: distance
 		}));
 
-		var temp = $("#result");
-		$(temp).find("#address-col-name").html($.localise.tr("Address"));
-		$(temp).find("#time-col-name").html($.localise.tr("Time"));
-		$(temp).find("#interval-col-name").html($.localise.tr("Interval"));
-		$(temp).find("#distance-col-name").html($.localise.tr("Distance"));
-		$(temp).find("#total-col-name").html($.localise.tr("Total:"));
+		var tmp = $("#result");
+		$(tmp).find("#address-col-name").html($.localise.tr("Address"));
+		$(tmp).find("#time-col-name").html($.localise.tr("Time"));
+		$(tmp).find("#interval-col-name").html($.localise.tr("Interval"));
+		$(tmp).find("#distance-col-name").html($.localise.tr("Distance"));
+		$(tmp).find("#total-col-name").html($.localise.tr("Total:"));
 		
 		platlon = [lat, lon];
 		prev_point = data.order[i].id;
 	}
 	$("#total-distance").text(humanize_distance(dtotal));
-	ordered_path = new google.maps.Polyline({path: ((provider === "yandex" && ycoords.length > 0) ? ycoords : coords), 
-											 strokeColor: "#0000FF", 
-											 strokeWeight: 6, strokeOpacity: 0.7});
-
+	ordered_path = L.polyline(ycoords.length > 0 ? ycoords : coords, {
+		color: "#00F",
+		opacity: 0.7,
+		weight: 6
+	}).addTo(map);
 	if ($("#show_result").prop("checked")) {
-		if ($("#road_lock").prop("checked") && provider === "google") {
-			var renderer, direction;
-			var bounds = null;
-			if (directions_data.renderers.length > 0) {
-				renderer = directions_data.renderers[0];
-				renderer.setMap(map);
-				direction = renderer.getDirections().routes[0];				
-				bounds = direction.bounds;
-			}			
-			for (var i = 1; i < directions_data.renderers.length; i++) {
-				renderer = directions_data.renderers[i];
-				renderer.setMap(map);
-				direction = renderer.getDirections().routes[0];				
-				bounds.union(direction.bounds);
-			}
-			map.panToBounds(bounds);
-		} else {
-			ordered_path.setMap(map);
-		}
-	} 
+		ordered_path.addTo(map);
+	}
 }
 /// Async distance calculator
 function calc_distances(coords, callback) {
 	var speed = $("#speed").val();
-	var matrix = [];
-	for (var i = 0; i < directions_data.renderers.length; i++)
-		directions_data.renderers[i].setMap(null);
+	var matrix = [], i = 0;
+	for (i = 0; i < directions_data.renderers.length; i++)
+		map.removeLayer(directions_data.renderers[i]);
 		
 	directions_data.renderers = [];
 	directions_data.directions = [];
@@ -664,68 +621,39 @@ function calc_distances(coords, callback) {
 	points_pending = coords.length * coords.length - coords.length;
 	points_pending_total = points_pending;
 	
-	for (var i = 0; i < coords.length; i++) {
+	for (i = 0; i < coords.length; i++) {
 		matrix.push([]);
 		directions_data.directions.push([]);
 		for (var j = 0; j < coords.length; j++) {
 			matrix[i].push(0);
 			directions_data.directions[i].push(null);
 			if (i == j)
-				continue;			
+				continue;
 			if (lock) {
-				if (provider === "google") {
-					var options = new Object;
-					options.travelMode = google.maps.TravelMode.DRIVING;
-					options.avoidHighways = false;
-					var directions = new google.maps.DirectionsService();
-					options.origin = coords[i];
-					options.destination = coords[j];
-					setTimeout(qx.lang.Function.bind(gdirections, this, directions, options, i, j, matrix, speed, callback), i * 500);
-				} else if (provider === "yandex") {
+				var options = {};
+				if (provider === "yandex") {
 					var points = [];
-					var options = new Object;
 					options.avoidTrafficJams = false;
-					options.mapStateAutoApply = true
-					points.push([coords[i].lat(), coords[i].lng()]);
-					points.push([coords[j].lat(), coords[j].lng()]);
+					options.mapStateAutoApply = true;
+					points.push([coords[i].lat, coords[i].lng]);
+					points.push([coords[j].lat, coords[j].lng]);
 					qx.lang.Function.bind(ydirections, this, points, options, i, j, matrix, speed, callback)();
 				}
 			} else {
-				matrix[i][j] = parseInt(wialon.util.Geometry.getDistance(coords[i].lat(), coords[i].lng(), coords[j].lat(), coords[j].lng()) / 1000 / speed * 60);
+				matrix[i][j] = parseInt(wialon.util.Geometry.getDistance(coords[i].lat, coords[i].lng, coords[j].lat, coords[j].lng) / 1000 / speed * 60, 10);
 			}
 		}
 	}
 	if (!lock)
 		callback(matrix);
 }
-/// Calculate directions in google way
-function gdirections(directions, options, x, y, matrix, speed, callback) {
-	directions.route(options, qx.lang.Function.bind(function(directions, options, x, y, matrix, speed, callback, dresult) {
-		if (!dresult) {
-			setTimeout(qx.lang.Function.bind(gdirections, this, directions, options, x, y, matrix, speed, callback), Math.random() * 8000);
-			return;
-		}
-		
-		if (dresult.status != google.maps.GeocoderStatus.OK) {
-			block_screen(false);
-			$("#result").html($.localise.tr("Unable to calculate the route: no roads available."));
-			return;							
-		}	
 
-		matrix[x][y] = parseInt(dresult.routes[0].legs[0].distance.value / 1000 / speed * 60);
-		set_progress(parseInt(((points_pending_total - points_pending) * 100 / points_pending_total)));
-		directions_data.directions[x][y] = dresult;
-		if (!--points_pending) {			
-			callback(matrix);
-		}
-	}, this, directions, options, x, y, matrix, speed, callback));
-}
 /// Calculate directions in yandex way
 function ydirections(points, options, x, y, matrix, speed, callback) {
 	ymaps.route(points, options).then(
 		qx.lang.Function.bind(function (x, y, matrix, speed, callback, el, i) {
-			matrix[x][y] = parseInt(el.getLength() / 1000 / speed * 60);
-			set_progress(parseInt(((points_pending_total - points_pending) * 100 / points_pending_total)));
+			matrix[x][y] = parseInt(el.getLength() / 1000 / speed * 60, 10);
+			set_progress(parseInt(((points_pending_total - points_pending) * 100 / points_pending_total), 10));
 			el.getPaths().each(qx.lang.Function.bind(function (data, x, y, path, i) {
 				data.directions[x][y] = path.geometry.getCoordinates();
 			}, this, directions_data, x, y), this);
@@ -755,22 +683,17 @@ var show_hide_instruments = (function () {
 			if ($('#result').is(':empty'))
 				$("#result_control").hide();
 			$("#map_div").css("margin-left", "40px");
-			
-			google.maps.event.trigger(map, "resize");
-			map.setZoom(map.getZoom());
 		} else {
 			ishide = false;
 			$("#show_instruments").hide();
 			$("#main-table-wrapper").show();
 			$("#result_control").show();
 			$("#map_div").css("margin-left", "0px");
-			
-			google.maps.event.trigger(map, "resize");
-			map.setZoom(map.getZoom());
 		}
-	}
+		map.invalidateSize();
+	};
 })();
-/// Block/Unblock screep
+/// Block/Unblock screen
 function block_screen(block) {
 	if (block)
 		$("#block,#block2").show();
@@ -805,18 +728,22 @@ function ltranlate () {
 	];
 }
 
+function center_map(lat, lon){
+	map.panTo(new L.LatLng(lat, lon));
+}
+
 /// We are ready now
 $(document).ready(function () {
 	var url = get_html_var("baseUrl");
 	if (!url)
-		url = get_html_var("hostUrl")
+		url = get_html_var("hostUrl");
 	if (!url)
-		return;	
+		return;
 	url += "/wsdk/script/wialon.js";
 
 	LANG = get_html_var("lang");
 	if ((!LANG) || ($.inArray(LANG, ["en", "ru"]) == -1))
-		LANG = "en"
+		LANG = "en";
 	$.localise('lang/', {language: LANG});
 	ltranlate();
 
@@ -844,24 +771,12 @@ $(document).ready(function () {
 	});
 	// show/hide optimized path
 	$("#show_result").click(function() {
-		if (!ordered_path)
+		if (ordered_path === null)
 			return;
 		if ($("#show_result").prop("checked")) {
-			if ($("#road_lock").prop("checked") && provider === "google") {
-				for (var i = 0; i < directions_data.renderers.length; i++) {
-					directions_data.renderers[i].setMap(map);
-				} 
-			} else {
-				ordered_path.setMap(map);
-			}
+			ordered_path.addTo(map);
 		} else {
-			if ($("#road_lock").prop("checked") && provider === "google") {
-				for (var i = 0; i < directions_data.renderers.length; i++) {
-					directions_data.renderers[i].setMap(null);
-				} 
-			} else {
-				ordered_path.setMap(null);
-			}
+			map.removeLayer(ordered_path);
 		}
 	});
 	// print content
@@ -873,9 +788,9 @@ $(document).ready(function () {
 	$("#save").click(function() {
 		var user = wialon.core.Session.getInstance().getCurrUser();
 		if ((!wialon) || (!user) || (!ordered_data))
-			return;		
-		wialon.core.Session.getInstance().createRoute(user, $.localise.tr("Route") + " " + wialon.util.DateTime.formatTime(wialon.core.Session.getInstance().getServerTime(), 0), 
-													  1, function(code, obj) {
+			return;
+		wialon.core.Session.getInstance().createRoute(user, $.localise.tr("Route") + " " + wialon.util.DateTime.formatTime(wialon.core.Session.getInstance().getServerTime(), 0),
+													1, function(code, obj) {
 			if (code || !ordered_data) {
 				alert($.localise.tr("Unable to save the route to Wialon."));
 				return;
@@ -926,7 +841,7 @@ $(document).ready(function () {
 				obj.createSchedule(schedule);
 				alert($.localise.tr("Route saved to Wialon."));
 			}, this, obj));
-		});				
+		});
 	});
 	$("body").keydown(function(e) {
 		if (e.keyCode == 27) {
@@ -938,8 +853,8 @@ $(document).ready(function () {
 		}
 	});
 
-	provider = "google";
-	$("[name='provider']").change(function(event) { 
+	provider = "yandex";
+	$("[name='provider']").change(function(event) {
 		provider = $(this).val();
-	}); 
+	});
 });

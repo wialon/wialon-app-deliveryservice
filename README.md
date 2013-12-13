@@ -1,4 +1,4 @@
-# Delivery Service, version 1.6: (July 5, 2013)
+# Delivery Service, version 1.7: (Dec 13, 2013)
 This is WEB application based on Apps from Gurtam (http://apps.wialon.com).
 
 ## Description
@@ -45,3 +45,7 @@ Working with applications in the GPS tracking system: http://docs.gurtam.com/en/
 
  * v1.6 (July 5, 2013)
 - Исправлена ошибка отображения в IE.
+
+ * v1.7 (Dec 13, 2013)
+- Leaflet used instead of Google Maps API
+- Google Maps layers removed
