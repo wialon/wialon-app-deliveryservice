@@ -129,7 +129,6 @@ function geocoding(address, id) {
 	var geocoder = ymaps.geocode(address,{'lang':'en-US'});
 	geocoder.then( function(res){
 		var count = Math.min(res.metaData.geocoder.found, res.metaData.geocoder.results);
-		console.log(res.metaData.geocoder);
 		var html = "";
 		for(var i=0; i<count; i++){
 			var obj = res.geoObjects.get(i);
