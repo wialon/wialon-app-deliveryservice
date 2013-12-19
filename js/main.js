@@ -263,8 +263,7 @@ function init_map() {
 	map = L.map("map_div", {
 		center: [50,32],
 		zoom: 5,
-		layers: [ gurtam ],
-		crs: L.CRS.EPSG3395
+		layers: [ gurtam ]
 	});
 	L.control.layers(layers).addTo(map);
 	map.invalidateSize();
