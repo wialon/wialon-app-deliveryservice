@@ -9,19 +9,19 @@ TRANSLATIONS = {
 
 	"&nbsp;to:&nbsp;": "",
 
-	"Mo": "",
+    "Mon": "",
 
-	"Tu": "",
+    "Tue": "",
 
-	"We": "",
+    "Wed": "",
 
-	"Th": "",
+    "Thu": "",
 
-	"Fr": "",
+    "Fri": "",
 
-	"Sa": "",
-	
-	"Su": "",
+    "Sat": "",
+
+    "Sun": "",
 
 	"h": "",
 
@@ -31,7 +31,7 @@ TRANSLATIONS = {
 	
 	"Stay duration, min:&nbsp;": "",
 
-	"Speed, kph:": "",
+	"Speed, km/h:": "",
 
 	"Lock first address": "",
 
@@ -91,5 +91,48 @@ TRANSLATIONS = {
 
 	"Delete address": "",
 
-	"Save": ""
+	"Save": "",
+
+    "ft": "",
+
+    "km/h": "",
+
+    "mph": "",
+
+    "km": "",
+
+    "mi": "",
+
+    "Sunday": "",
+    "Monday": "",
+    "Tuesday": "",
+    "Wednesday": "",
+    "Thursday": "",
+    "Friday": "",
+    "Saturday": "",
+
+    "January": "",
+    "February": "",
+    "March": "",
+    "April": "",
+    "May": "",
+    "June": "",
+    "July": "",
+    "August": "",
+    "September": "",
+    "October": "",
+    "November": "",
+    "December": "",
+
+    "Jan": "",
+    "Feb": "",
+    "Mar": "",
+    "Apr": "",
+    "Jun": "",
+    "Jul": "",
+    "Aug": "",
+    "Sep": "",
+    "Oct": "",
+    "Nov": "",
+    "Dec": ""
 };

@@ -8,29 +8,35 @@ TRANSLATIONS = {
 	"Deliver from:&nbsp;": "Доставить с:&nbsp;",
 	"&nbsp;to:&nbsp;": "&nbsp;по:&nbsp;",
 
-	"Mo": "Пн",
+	"Mon": "Пн",
 
-	"Tu": "Вт",
+	"Tue": "Вт",
 
-	"We": "Ср",
+	"Wed": "Ср",
 
-	"Th": "Чт",
+	"Thu": "Чт",
 
-	"Fr": "Пт",
+	"Fri": "Пт",
 
-	"Sa": "Сб",
+	"Sat": "Сб",
 	
-	"Su": "Вс",
+	"Sun": "Вс",
 	
 	"h": "ч",
 
-	"m": "m",
+	"m": "мин",
+
+	"km": "км",
+
+	"mi": "ми",
 
 	"weeks": "нед.",
 
 	"Stay duration, min:&nbsp;": "Длительность посещения, мин&nbsp;:",
 
-	"Speed, kph:": "Скорость, км/ч:",
+	"Speed, km/h:": "Скорость, км/ч:",
+
+	"Speed, mph:": "Скорость, ми/ч:",
 
 	"Lock first address": "Зафиксировать первый адрес",
 
@@ -80,8 +86,6 @@ TRANSLATIONS = {
 
 	"Route saved to Wialon.": "Маршрут создан в Wialon.",
 
-	"Delivery service": "Служба доставки",
-
 	"Add from map": "Добавить с карты",
 
 	"Add from geofences": "Добавить из геозон",
@@ -90,5 +94,44 @@ TRANSLATIONS = {
 
 	"Delete address": "Удалить адрес",
 	
-	"Save": "Сохранить"
+	"Save": "Сохранить",
+
+    "ft": "фт",
+
+    "km/h": "км/ч",
+
+    "mph": "ми/ч",
+
+    "Sunday": "Воскресенье",
+    "Monday": "Понедельник",
+    "Tuesday": "Вторник",
+    "Wednesday": "Среда",
+    "Thursday": "Чертверг",
+    "Friday": "Пятница",
+    "Saturday": "Суббота",
+
+    "January": "Январь",
+    "February": "Февраль",
+    "March": "Март",
+    "April": "Апрель",
+    "May": "Май",
+    "June": "Июнь",
+    "July": "Июль",
+    "August": "Август",
+    "September": "Сентябрь",
+    "October": "Октябрь",
+    "November": "Ноябрь",
+    "December": "Декабрь",
+
+    "Jan": "Янв",
+    "Feb": "Фев",
+    "Mar": "Мар",
+    "Apr": "Апр",
+    "Jun": "Июн",
+    "Jul": "Июл",
+    "Aug": "Авг",
+    "Sep": "Сен",
+    "Oct": "Окт",
+    "Nov": "Ноя",
+    "Dec": "Дек"
 };

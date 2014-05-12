@@ -28,6 +28,13 @@ var points_pending_total = 0;
 var directions_data = {directions: [], renderers: []};
 ///
 var LANG = "";
+///
+var flagMeasure = null;
+/// first day
+var firstDay = null;
+/// set AM/PM format time: false - 24h, true - 12h
+var timeFormatAMPM = false;
+
 /// Execute callback
 function exec_callback(id) {
 	if (!callbacks[id])
@@ -126,7 +133,16 @@ function geocoding(address, id) {
 	if (!ymaps || !("geocode" in ymaps)) {
 		return;
 	}
-	var geocoder = ymaps.geocode(address,{'lang':'en-US'});
+    var lang;
+    switch (LANG) {
+        case 'ru': lang = 'ru-RU';
+            break;
+        case 'de': lang = 'de-De';
+            break;
+        default : lang = 'en-US';
+            break;
+    }
+	var geocoder = ymaps.geocode(address,{'lang':lang});
 	geocoder.then( function(res){
 		var count = Math.min(res.metaData.geocoder.found, res.metaData.geocoder.results);
 		var html = "";
@@ -239,7 +255,15 @@ function login(code) {
 		alert($.localise.tr("Unable to connect to the server."));
 		return;
 	}
-	init_map();
+    // load user settings
+    // get string of time format
+    wialon.core.Session.getInstance().getCurrUser().getLocale(function(arg, locale){
+        firstDay = (locale && locale.wd && locale.wd > 1) ? 0 : 1;
+        timeFormatAMPM = /%I/.test(locale.fd);
+        flagMeasure = getMeasureUnit();
+        init_map();
+        ltranlate();
+    });
 }
 /// Init SDK
 function init_sdk() {
@@ -279,12 +303,17 @@ function init_map() {
 			rgeocoding(e.latlng, arr[1]);
 		}
 	});
-	
-	var locale = 'ru-RU';
-	if (LANG == 'en') {
-		locale = 'en-US';
-	}
-	load_script("http://api-maps.yandex.ru/2.0-stable/?load=package.full&lang=" + locale, function () {
+
+    var lang;
+    switch (LANG) {
+        case 'ru': lang = 'ru-RU';
+            break;
+        case 'de': lang = 'de-De';
+            break;
+        default : lang = 'en-US';
+            break;
+    }
+	load_script("http://api-maps.yandex.ru/2.0-stable/?load=package.full&lang=" + lang, function () {
 		if (typeof ymaps === "undefined") {
 			alert($.localise.tr("Error when working with Yandex Maps."));
 		}
@@ -312,7 +341,13 @@ function add_new_point() {
 	var id = (new Date()).getTime();
 	var rows_count = $("#points [id^=row_number_]").size();
 	var template = _.template($("#new-poin-template").html());
-	var html = template({id: id, rows_count: (++rows_count)});
+	var html = template({
+        id: id,
+        rows_count: (++rows_count),
+        fd: firstDay,
+        tf: timeFormatAMPM,
+        measure: flagMeasure
+    });
 	$("#points").append(html);
 	$("#to_" + id).val("1425");
 	
@@ -320,13 +355,13 @@ function add_new_point() {
 	$(temp).find("#delivery-address-title").html($.localise.tr("Delivery address:"));
 	$(temp).find("#deliver-from-title").html($.localise.tr("Deliver from:&nbsp;"));
 	$(temp).find("#delivery-to-title").html($.localise.tr("&nbsp;to:&nbsp;"));
-	$(temp).find(".mo-day").html($.localise.tr("Mo"));
-	$(temp).find(".tu-day").html($.localise.tr("Tu"));
-	$(temp).find(".we-day").html($.localise.tr("We"));
-	$(temp).find(".th-day").html($.localise.tr("Th"));
-	$(temp).find(".fr-day").html($.localise.tr("Fr"));
-	$(temp).find(".sa-day").html($.localise.tr("Sa"));
-	$(temp).find(".su-day").html($.localise.tr("Su"));
+	$(temp).find(".mo-day").html($.localise.tr("Mon"));
+	$(temp).find(".tu-day").html($.localise.tr("Tue"));
+	$(temp).find(".we-day").html($.localise.tr("Wed"));
+	$(temp).find(".th-day").html($.localise.tr("Thu"));
+	$(temp).find(".fr-day").html($.localise.tr("Fri"));
+	$(temp).find(".sa-day").html($.localise.tr("Sat"));
+	$(temp).find(".su-day").html($.localise.tr("Sun"));
 	$(temp).find("#stay-duration-title").html($.localise.tr("Stay duration, min:&nbsp;"));
 	
 	$(temp).find(".map_div").attr("title", $.localise.tr("Add from map"));
@@ -345,10 +380,10 @@ function add_new_point() {
 		update_map();
 	});
 
-	$("#from_" + id).change(update_marker);
-	$("#fromday_" + id).change(update_marker);
-	$("#to_" + id).change(update_marker);
-	$("#taday_" + id).change(update_marker);
+//	$("#from_" + id).change(update_marker);
+//	$("#fromday_" + id).change(update_marker);
+//	$("#to_" + id).change(update_marker);
+//	$("#taday_" + id).change(update_marker);
 
 	$("#edit_" + id).keyup(function(e) {
 		if (input_timer) {
@@ -498,15 +533,16 @@ function optimize_route() {
 		}));
 	}));
 }
-
 function humanize_distance (dist) {
-	var km = Math.floor(dist / 1000);
-	var m = Math.floor((dist % 1000));
-	if (km > 0) {
-		return wialon.util.String.sprintf("%s км %s м", km, m);
-	} else {
-		return wialon.util.String.sprintf("%s м", m);
-	}
+    var km_mil = (flagMeasure) ? Math.round( convertData({l: dist / 1000}) ) : Math.floor(dist / 1000);
+    var m_ft   = (flagMeasure) ? Math.round( convertData({l: dist % 1000}) ) : Math.floor(dist % 1000);
+    var unit_km = (flagMeasure) ? "mi" : "km";
+    var unit_m = (flagMeasure) ? "ft" : "m";
+    if (km_mil > 0) {
+        return wialon.util.String.sprintf("%s " + $.localise.tr(unit_km) + " %s " + $.localise.tr(unit_m), km_mil, m_ft);
+    } else {
+        return wialon.util.String.sprintf("%s " + $.localise.tr(unit_m), m_ft);
+    }
 }
 /// Optimize route
 function show_optimized_path(data) {
@@ -608,7 +644,7 @@ function show_optimized_path(data) {
 }
 /// Async distance calculator
 function calc_distances(coords, callback) {
-	var speed = $("#speed").val();
+	var speed = (getMeasureUnit()) ? convertData({sRevers: $("#speed").val()}) : $("#speed").val(); // convert mph to km/h from input
 	var matrix = [], i = 0;
 	for (i = 0; i < directions_data.renderers.length; i++)
 		map.removeLayer(directions_data.renderers[i]);
@@ -702,7 +738,7 @@ function block_screen(block) {
 function ltranlate () {
 	$("#main-title").html($.localise.tr("Add addresses of delivery and indicate time range to visit them."));
 	$("#add-address-title").html($.localise.tr("Add address"));
-	$("#speed-input-title").html($.localise.tr("Speed, kph:"));
+	$("#speed-input-title").html( (getMeasureUnit()) ? $.localise.tr("Speed, mph:") : $.localise.tr("Speed, km/h:"));
 	$("#lock-first-title").html($.localise.tr("Lock first address"));
 	$("#lock-last-title").html($.localise.tr("Lock last address"));
 	$("#stick-schedule-title").html($.localise.tr("Stick to schedule"));
@@ -713,21 +749,49 @@ function ltranlate () {
 	$("#print").val($.localise.tr("Print"));
 	$("#save").val($.localise.tr("Save"));
 
-	$("#logo-title").html($.localise.tr("Delivery service"));
+//	$("#logo-title").html($.localise.tr("Delivery service"));
 
 	DAYS = [
-		$.localise.tr("Mo"),
-		$.localise.tr("Tu"),
-		$.localise.tr("We"),
-		$.localise.tr("Th"),
-		$.localise.tr("Fr"),
-		$.localise.tr("Sa"),
-		$.localise.tr("Su")
+		$.localise.tr("Mon"),
+		$.localise.tr("Tue"),
+		$.localise.tr("Wed"),
+		$.localise.tr("Thu"),
+		$.localise.tr("Fri"),
+		$.localise.tr("Sat"),
+		$.localise.tr("Sun")
 	];
 }
 
 function center_map(lat, lon){
 	map.panTo(new L.LatLng(lat, lon));
+}
+function getMeasureUnit(){
+    var user = wialon.core.Session.getInstance().getCurrUser();
+    var metric = user.getMeasureUnits();
+    metric = (metric) ? metric : 0; // check for users who have never changed the parameters of the metric
+    return metric;
+}
+function convertData(settings) {
+        if (!settings) return null;
+//        var set = {
+//            unit: unit,
+//            s: null, // speed
+//            l: null, // length in meter
+//            h: null // Altitude in meter
+//        };
+        var metric = flagMeasure;
+        if (settings.s) {
+            return (metric) ? Math.round( parseInt(settings.s) / 1.609344) : parseInt(settings.s);
+        }
+        if (settings.sRevers) { // mph to km/h
+            return (metric) ? Math.round( parseInt(settings.sRevers) * 1.609344) : parseInt(settings.sRevers);
+        }
+        if (settings.l) {
+            return (metric) ? Math.round( parseInt(settings.l) * 0.6214) : parseInt(settings.l);
+        }
+        if (settings.h) {
+            return (metric) ? Math.round( parseInt(settings.h) / 3.2808) : parseInt(settings.h);
+        }
 }
 
 /// We are ready now
@@ -740,10 +804,9 @@ $(document).ready(function () {
 	url += "/wsdk/script/wialon.js";
 
 	LANG = get_html_var("lang");
-	if ((!LANG) || ($.inArray(LANG, ["en", "ru"]) == -1))
+	if ((!LANG) || ($.inArray(LANG, ["en", "ru", "de"]) == -1))
 		LANG = "en";
 	$.localise('lang/', {language: LANG});
-	ltranlate();
 
 	load_script(url, init_sdk);
 

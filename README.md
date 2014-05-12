@@ -1,4 +1,4 @@
-# Delivery Service, version 1.7: (Dec 13, 2013)
+# Delivery Service, version 1.8: (May 12, 2014)
 This is WEB application based on Apps from Gurtam (http://apps.wialon.com).
 
 ## Description
@@ -24,28 +24,33 @@ Working with applications in the GPS tracking system: http://docs.gurtam.com/en/
 - initial release
 
  * v1.2 (February 01, 2013)  
-- Добавлены тултипы к вершинам на карте (адрес, интервал времени).
-- В таблице результатов добавлен столбец с интерваллм времени.
-- При клике на строке в таблице результатов центрируется карта.
-- Добавлен расчёт расстояний с учётом дорог(google).
-- Увеличен шаг с 5 до 15 минут в выпадающем списке интервалов.
-- Изменена толщина линий результата расчета.
-- Добавлено отображение Guгtam maps.
+- add tooltips for map header (address, time interval)
+- add results table time interval column
+- add results table row click map centered
+- add distance calculation via roads (by Google)
+- dropdown interval list: increased interval from 5 to 15 minutes
+- result calculation thickness changed
+- add Guгtam maps.
 
  * v1.3 (March 10, 2013)  
-- Добавлено закрепление начальной и конечных точек.
-- В качестве системы прокладки маршрутов можно использовать Yandex.
-- Объезд точек можно планировать в рамках недели.
+- add pin stard & end points
+- add route system via Yandex
+- add week interval detour locations
 
  * v1.4 (April 24, 2013)
 - English language supported.
 
  * v1.5 (June 14, 2013)
-- Исправлена ошибка отображения в iframe в Opera.
+- Opera ifram fix
 
  * v1.6 (July 5, 2013)
-- Исправлена ошибка отображения в IE.
+- IE fix
 
  * v1.7 (Dec 13, 2013)
-- Leaflet used instead of Google Maps API
+- leaflet used instead of Google Maps API
 - Google Maps layers removed
+
+ * v1.8 (May 12, 2014)
+- add US metrics
+- add time mask
+- German language support

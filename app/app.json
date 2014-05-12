@@ -21,20 +21,24 @@
 		"url": "https://github.com/wialon/wialon-app-deliveryservice"
 	},
 	"modules": [
-		"SDK",
-		"Маршруты (опционально)"
+		"sdk",
+		"avl_route"
 	],
 	"params": [
 		"Active SID",
 		"Base URL",
-		"Host URL"
+		"Host URL",
+        "Language",
+        "Current user"
 	],
 	"language": [
 		"en",
-		"ru"
+		"ru",
+        "de"
 	],
-	"build_date": "2013-12-13",
-	"version": "1.7",
+	"build_date": "2014-05-12",
+	"release_date": "2013-01-27",
+	"version": "1.8",
 	"keywords": [
 		"wialon",
 		"wialon-apps",
