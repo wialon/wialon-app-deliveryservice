@@ -107,6 +107,77 @@ function load_script(src, callback) {
 	}
 	document.getElementsByTagName("head")[0].appendChild(script);
 }
+/// Fetch address details from Yandex GeocoderMetaData
+function fetchAddress(addressDetails) {
+	var addr = {}, i;
+	if (addressDetails) {
+		if (addressDetails.Country) {
+			addr.country = addressDetails.Country.CountryName;
+			if (addressDetails.Country.AdministrativeArea) {
+				addr.region = addressDetails.Country.AdministrativeArea.AdministrativeAreaName;
+				if (addressDetails.Country.AdministrativeArea.Locality) {
+					addr.city = addressDetails.Country.AdministrativeArea.Locality.LocalityName;
+					if (addressDetails.Country.AdministrativeArea.Locality.Thoroughfare) {
+						addr.street = addressDetails.Country.AdministrativeArea.Locality.Thoroughfare.ThoroughfareName;
+						if (addressDetails.Country.AdministrativeArea.Locality.Thoroughfare.Premise) {
+							addr.house = addressDetails.Country.AdministrativeArea.Locality.Thoroughfare.Premise.PremiseNumber;
+						}
+					}
+				}
+				else if (addressDetails.Country.AdministrativeArea.SubAdministrativeArea) {
+					addr.region = addressDetails.Country.AdministrativeArea.SubAdministrativeArea.SubAdministrativeAreaName;
+					if (addressDetails.Country.AdministrativeArea.SubAdministrativeArea.Locality) {
+						addr.city = addressDetails.Country.AdministrativeArea.SubAdministrativeArea.Locality.LocalityName;
+						if (addressDetails.Country.AdministrativeArea.SubAdministrativeArea.Locality.Thoroughfare) {
+							addr.street = addressDetails.Country.AdministrativeArea.SubAdministrativeArea.Locality.Thoroughfare.ThoroughfareName;
+							if (addressDetails.Country.AdministrativeArea.SubAdministrativeArea.Locality.Thoroughfare.Premise) {
+								addr.house = addressDetails.Country.AdministrativeArea.SubAdministrativeArea.Locality.Thoroughfare.Premise.PremiseNumber;
+							}
+						}
+						else if (addressDetails.Country.AdministrativeArea.SubAdministrativeArea.Locality.Premise) {
+							addr.city = addressDetails.Country.AdministrativeArea.SubAdministrativeArea.Locality.Premise.PremiseName;
+						}
+						if (addressDetails.Country.AdministrativeArea.SubAdministrativeArea.Locality.DependentLocality) {
+							addr.region = addressDetails.Country.AdministrativeArea.SubAdministrativeArea.Locality.DependentLocality.DependentLocalityName;
+							if (addressDetails.Country.AdministrativeArea.SubAdministrativeArea.Locality.DependentLocality.DependentLocality) {
+								addr.region = addressDetails.Country.AdministrativeArea.SubAdministrativeArea.Locality.DependentLocality.DependentLocality.DependentLocalityName;
+							}
+						}			
+					}
+					else if (addressDetails.Country.AdministrativeArea.SubAdministrativeArea.Premise) {
+						addr.city = addressDetails.Country.AdministrativeArea.SubAdministrativeArea.PremiseName;
+					}
+				}
+			}
+		}
+	}
+	if (addr.city === addr.region) {
+		delete addr.region;
+	}
+	for (i in addr) {
+		if (!addr[i]) {
+			delete addr[i];
+		}
+	}
+	return addr;
+}
+function generatePopupList(geocoderResult, id) {
+	var count = Math.min(geocoderResult.metaData.geocoder.found, geocoderResult.metaData.geocoder.results);
+	var html = "";
+	for(var i=0; i<count; i++){
+		var obj = geocoderResult.geoObjects.get(i);
+		var coord = obj.geometry.getCoordinates();
+		var addressDetails = obj.properties.get('metaDataProperty').GeocoderMetaData.AddressDetails;
+		var addr = fetchAddress(addressDetails);
+		if ( !_(addr).keys().length ) continue;
+		var addrFormatted = formatAddress(addr);
+		if ( !addrFormatted ) continue;
+		html += "<li data='0' id='" + id + "' lat='" +coord[0]+ "' lon='" +coord[1]+ "'><span>";
+		html += addrFormatted;
+		html += "</span></li>";
+	}
+	return html;
+}
 /// Resolve coordinates
 function rgeocoding(lonlat, id) {
 	if (!ymaps || !("geocode" in ymaps)) {
@@ -114,15 +185,7 @@ function rgeocoding(lonlat, id) {
 	}
 	var geocoder = ymaps.geocode([lonlat.lat,lonlat.lng]);
 	geocoder.then( function(res){
-		var count = Math.min(res.metaData.geocoder.found, res.metaData.geocoder.results);
-		var html = "";
-		for(var i=0; i<count; i++){
-			var obj = res.geoObjects.get(i);
-			var coord = obj.geometry.getCoordinates();
-			html += "<option data='0' id='" + id + "' lat='" +coord[0]+ "' lon='" +coord[1]+ "'>";
-			html += obj.properties.get('text');
-			html += "</option>";
-		}
+		var html = generatePopupList(res, id);
 		show_popup(html, id);
 	}, function(){
 		show_popup("", id);
@@ -133,28 +196,19 @@ function geocoding(address, id) {
 	if (!ymaps || !("geocode" in ymaps)) {
 		return;
 	}
-    var lang;
-    switch (LANG) {
-        case 'ru': lang = 'ru-RU';
-            break;
-        case 'de': lang = 'de-De';
-            break;
-        default : lang = 'en-US';
-            break;
-    }
+	var lang;
+	switch (LANG) {
+			case 'ru': lang = 'ru-RU';
+					break;
+			case 'de': lang = 'de-De';
+					break;
+			default : lang = 'en-US';
+					break;
+	}
 	var geocoder = ymaps.geocode(address,{'lang':lang});
 	geocoder.then( function(res){
-		var count = Math.min(res.metaData.geocoder.found, res.metaData.geocoder.results);
-		var html = "";
-		for(var i=0; i<count; i++){
-			var obj = res.geoObjects.get(i);
-			var coord = obj.geometry.getCoordinates();
-			html += "<option data='0' id='" + id + "' lat='" +coord[0]+ "' lon='" +coord[1]+ "'>";
-			html += obj.properties.get('text');
-			html += "</option>";
-		}
+		var html = generatePopupList(res, id);
 		show_popup(html, id);
-
 	}, function(){
 		show_popup("", id);
 	});
@@ -190,9 +244,9 @@ function process_poi(name, id) {
 	// output
 	var html = "";
 	for (i = 0; i < result.length; i++) {
-		html += "<option data='" + result[i].value + "' id='" + id + "' lat='" + result[i].lat + "' lon='" + result[i].lon + "'>";
+		html += "<li data='" + result[i].value + "' id='" + id + "' lat='" + result[i].lat + "' lon='" + result[i].lon + "'><span>";
 		html += result[i].name;
-		html += "</option>";
+		html += "</span></li>";
 	}
 	show_popup(html, id);
 }
@@ -227,43 +281,43 @@ function process_geozone(name, id) {
 	// output
 	var html = "";
 	for (i = 0; i < result.length; i++) {
-		html += "<option data='" + result[i].value + "' id='" + id + "' lat='" + result[i].lat + "' lon='" + result[i].lon + "'>";
+		html += "<li data='" + result[i].value + "' id='" + id + "' lat='" + result[i].lat + "' lon='" + result[i].lon + "'><span>";
 		html += result[i].name;
-		html += "</option>";
+		html += "</span></li>";
 	}
 	show_popup(html, id);
 }
 /// Show popup menu
 function show_popup(html, id) {
-	if ( html === "" ) {
-		$("#popup").parent().hide();
+	var $popup = $("#popup");
+	if (!html) {
+		$popup.parent().hide();
 	} else {
 		var top = $("#edit_" + id).position().top + 20;
 		var left = $("#edit_" + id).position().left;
-		$("#popup").html(html);
-		var size = $("#popup option").size();
-		if (size > 20)
-			size = 20;
-		else if (size < 2)
-			size = 2;
-		$("#popup").attr("size", size).parent().css("top", top + "px").css("left", left + "px").show();
+		$popup.html(html);
+		$popup.children('li:first').addClass('selected');
+		$popup.parent().css("top", top + "px").css("left", left + "px").show();
 	}
 }
 /// Login result
 function login(code) {
+	var currentUser = wialon.core.Session.getInstance().getCurrUser(),
+			addressFormat,
+			addressFormatArray;
 	if (code) {
 		alert($.localise.tr("Unable to connect to the server."));
 		return;
 	}
-    // load user settings
-    // get string of time format
-    wialon.core.Session.getInstance().getCurrUser().getLocale(function(arg, locale){
-        firstDay = (locale && locale.wd && locale.wd > 1) ? 0 : 1;
-        timeFormatAMPM = /%I/.test(locale.fd);
-        flagMeasure = getMeasureUnit();
-        init_map();
-        ltranlate();
-    });
+	// load user settings
+	// get string of time format
+	currentUser.getLocale(function(arg, locale){
+			firstDay = (locale && locale.wd && locale.wd > 1) ? 0 : 1;
+			timeFormatAMPM = /%I/.test(locale.fd);
+			flagMeasure = getMeasureUnit();
+			init_map();
+			ltranlate();
+	});
 }
 /// Init SDK
 function init_sdk() {
@@ -272,8 +326,9 @@ function init_sdk() {
 		url = get_html_var("hostUrl");
 	if (!url)
 		return;
+	var user = get_html_var("user") || "";
 	wialon.core.Session.getInstance().initSession(url);
-	wialon.core.Session.getInstance().duplicate(get_html_var("sid"), "", true, login);
+	wialon.core.Session.getInstance().duplicate(get_html_var("sid"), user, true, login);
 }
 /// Init map
 function init_map() {
@@ -304,15 +359,15 @@ function init_map() {
 		}
 	});
 
-    var lang;
-    switch (LANG) {
-        case 'ru': lang = 'ru-RU';
-            break;
-        case 'de': lang = 'de-De';
-            break;
-        default : lang = 'en-US';
-            break;
-    }
+	var lang;
+	switch (LANG) {
+			case 'ru': lang = 'ru-RU';
+					break;
+			case 'de': lang = 'de-De';
+					break;
+			default : lang = 'en-US';
+					break;
+	}
 	load_script("http://api-maps.yandex.ru/2.0-stable/?load=package.full&lang=" + lang, function () {
 		if (typeof ymaps === "undefined") {
 			alert($.localise.tr("Error when working with Yandex Maps."));
@@ -342,12 +397,12 @@ function add_new_point() {
 	var rows_count = $("#points [id^=row_number_]").size();
 	var template = _.template($("#new-poin-template").html());
 	var html = template({
-        id: id,
-        rows_count: (++rows_count),
-        fd: firstDay,
-        tf: timeFormatAMPM,
-        measure: flagMeasure
-    });
+		id: id,
+		rows_count: (++rows_count),
+		fd: firstDay,
+		tf: timeFormatAMPM,
+		measure: flagMeasure
+	});
 	$("#points").append(html);
 	$("#to_" + id).val("1425");
 	
@@ -390,26 +445,67 @@ function add_new_point() {
 			clearTimeout(input_timer);
 			input_timer = null;
 		}
-		if (e.keyCode == 13 || e.keyCode == 27)
+		if (e.keyCode == 13 || e.keyCode == 27 || e.keyCode == 40 || e.keyCode == 38) {
 			return;
+		}
 		input_timer = setTimeout("check_input(" + id + ")", 100);
 	}).focus(function() {
 		last_focused = $(this).attr("id");
 	}).focus();
 	$("#edit_" + id).keydown(function(e) {
+		var $popup = $('#popup');
 		if (e.keyCode == 13) {
 			if (input_timer) {
 				clearTimeout(input_timer);
 				input_timer = null;
 			}
-			var options = $("#popup option");
+			var options = $popup.children('li');
 			if (!options.size())
 				return;
-			var option = $(options.get(0));
+			var option = options.filter('.selected:first');
 			var id = option.attr("id");
-			$("#edit_" + id).val(option.html()).attr("lat", option.attr("lat")).attr("lon", option.attr("lon")).attr("data", option.attr("data"));
-			$("#popup").parent().hide();
+			$("#edit_" + id).val(option.text()).attr("lat", option.attr("lat")).attr("lon", option.attr("lon")).attr("data", option.attr("data"));
+			$popup.parent().hide();
 			update_map();
+		}
+		else if (e.keyCode == 40 || e.keyCode == 38) {
+			var $element,
+				$liFirst,
+				scrollPercent;
+			// 40 = down arrow, 38 = up arrow
+			if ($popup.children('.selected:first').length) {
+				$element = $popup.children('.selected:first')[e.keyCode == 40 ? 'next' : 'prev']();
+				if ($element.length) {
+					$popup.off('mouseenter.popup', 'li');
+					$(document).off('mousemove.popup');
+					popupMouseenterHandler.call($element);
+					$liFirst = $popup.children('li:first');
+					elementBottom = $element.offset().top + $element.outerHeight() - $liFirst.offset().top;
+					if (elementBottom <= $popup.height()) {
+						scrollPercent	= 0;
+					}
+					else {
+						scrollPercent = elementBottom / $popup[0].scrollHeight;
+					}
+					$popup.stop(true, true).animate({
+						scrollTop: parseInt(scrollPercent * ($popup[0].scrollHeight - $popup.height()) ) // * 150
+					}, 300, function(){
+						var startTime = (new Date()).getTime();
+						$(document).off('mousemove.popup');
+						$(document).on({
+							'mousemove.popup': function(event){
+								if ($(event.target).prop('tagName') != 'input' && (new Date()).getTime() - startTime > 400) {
+									$popup.on({'mouseenter.popup': popupMouseenterHandler}, 'li');
+									$(document).off('mousemove.popup');
+								}
+							}
+						});
+					});
+				}
+			}
+			e.preventDefault();
+			e.stopImmediatePropagation();
+			return false;
 		}
 	});
 	$("#row_" + id + " div[usage]").click(function() {
@@ -494,7 +590,7 @@ function update_map() {
 function optimize_route() {
 	var coords = [];
 	$("#result").empty();
-	$("[id^=edit_]").each(function() {
+	$("[id^=edit_][lat][lon]").each(function() {
 		var lat = $(this).attr("lat");
 		var lon = $(this).attr("lon");
 		var pt = L.latLng(lat, lon);
@@ -534,15 +630,15 @@ function optimize_route() {
 	}));
 }
 function humanize_distance (dist) {
-    var km_mil = (flagMeasure) ? Math.round( convertData({l: dist / 1000}) ) : Math.floor(dist / 1000);
-    var m_ft   = (flagMeasure) ? Math.round( convertData({l: dist % 1000}) ) : Math.floor(dist % 1000);
-    var unit_km = (flagMeasure) ? "mi" : "km";
-    var unit_m = (flagMeasure) ? "ft" : "m";
-    if (km_mil > 0) {
-        return wialon.util.String.sprintf("%s " + $.localise.tr(unit_km) + " %s " + $.localise.tr(unit_m), km_mil, m_ft);
-    } else {
-        return wialon.util.String.sprintf("%s " + $.localise.tr(unit_m), m_ft);
-    }
+	var km_mil = (flagMeasure) ? Math.round( convertData({l: dist / 1000}) ) : Math.floor(dist / 1000);
+	var m_ft   = (flagMeasure) ? Math.round( convertData({l: dist % 1000}) ) : Math.floor(dist % 1000);
+	var unit_km = (flagMeasure) ? "mi" : "km";
+	var unit_m = (flagMeasure) ? "ft" : "m";
+	if (km_mil > 0) {
+		return wialon.util.String.sprintf("%s " + $.localise.tr(unit_km) + " %s " + $.localise.tr(unit_m), km_mil, m_ft);
+	} else {
+		return wialon.util.String.sprintf("%s " + $.localise.tr(unit_m), m_ft);
+	}
 }
 /// Optimize route
 function show_optimized_path(data) {
@@ -558,7 +654,7 @@ function show_optimized_path(data) {
 		return;
 	}
 
-	var inputs = $("[id^=edit_]"), i = 0;
+	var inputs = $("[id^=edit_][lat][lon]"), i = 0;
 	var result_template = _.template($("#table-result-template").html());
 	var html = result_template({});
 	$("#result").html(html);
@@ -766,34 +862,94 @@ function center_map(lat, lon){
 	map.panTo(new L.LatLng(lat, lon));
 }
 function getMeasureUnit(){
-    var user = wialon.core.Session.getInstance().getCurrUser();
-    var metric = user.getMeasureUnits();
-    metric = (metric) ? metric : 0; // check for users who have never changed the parameters of the metric
-    return metric;
+	var user = wialon.core.Session.getInstance().getCurrUser();
+	var metric = user.getMeasureUnits();
+	metric = (metric) ? metric : 0; // check for users who have never changed the parameters of the metric
+	return metric;
 }
 function convertData(settings) {
-        if (!settings) return null;
+	if (!settings) return null;
 //        var set = {
 //            unit: unit,
 //            s: null, // speed
 //            l: null, // length in meter
 //            h: null // Altitude in meter
 //        };
-        var metric = flagMeasure;
-        if (settings.s) {
-            return (metric) ? Math.round( parseInt(settings.s) / 1.609344) : parseInt(settings.s);
-        }
-        if (settings.sRevers) { // mph to km/h
-            return (metric) ? Math.round( parseInt(settings.sRevers) * 1.609344) : parseInt(settings.sRevers);
-        }
-        if (settings.l) {
-            return (metric) ? Math.round( parseInt(settings.l) * 0.6214) : parseInt(settings.l);
-        }
-        if (settings.h) {
-            return (metric) ? Math.round( parseInt(settings.h) / 3.2808) : parseInt(settings.h);
-        }
+	var metric = flagMeasure;
+	if (settings.s) {
+			return (metric) ? Math.round( parseInt(settings.s) / 1.609344) : parseInt(settings.s);
+	}
+	if (settings.sRevers) { // mph to km/h
+			return (metric) ? Math.round( parseInt(settings.sRevers) * 1.609344) : parseInt(settings.sRevers);
+	}
+	if (settings.l) {
+			return (metric) ? Math.round( parseInt(settings.l) * 0.6214) : parseInt(settings.l);
+	}
+	if (settings.h) {
+			return (metric) ? Math.round( parseInt(settings.h) / 3.2808) : parseInt(settings.h);
+	}
 }
+var formatAddress = (function(){
+	var format,
+		DELIMITER = ', ',
+		WIALON_ADDR = {
+			'1': 'country',
+			'2': 'region',
+			'3': 'city',
+			'4': 'street',
+			'5': 'house'
+		};
 
+	var addChangeCustomPropertyEventListener = function(){
+		wialon.core.Session.getInstance().getCurrUser().addListener('changeCustomProperty', function(event){
+			event.getData().n === 'us_addr_fmt' && getWialonAddressFormat();
+		});
+		return true;
+	};
+
+	var getWialonAddressFormat = function(){
+		var addrFmt = wialon.core.Session.getInstance().getCurrUser().getCustomProperty('us_addr_fmt', '').split('_'),
+			geocodingFlags = addrFmt.length > 1 ? Number(addrFmt[0]) >> 16 : 5349; // 5349 << 16 is binary 3 bit 1, 2, 3, 4, 5
+		
+		format = splitByBits(geocodingFlags, 3);
+	};
+
+	return function(obj) {
+		var res = [],
+			delimiter = '',
+			i;
+
+		!format && addChangeCustomPropertyEventListener() && getWialonAddressFormat();
+		for (i = format.length - 1; i > -1; i--) {
+			if ( WIALON_ADDR[format[i]] && obj[ WIALON_ADDR[format[i]] ] ) {
+				res.unshift( obj[ WIALON_ADDR[format[i]] ] );
+			}
+		}
+
+		return res.join(DELIMITER);
+	};
+}());
+
+function splitByBits(number, bits){
+	bits = Math.round(Number(bits)) || 1;
+	var bitMask = Math.pow(2, bits) - 1,
+			n = Number(number),
+			t,
+			res = [];
+
+	do {
+		t = n & bitMask;
+		res.unshift(t); // put item to the beginning of the res array
+		n >>= bits;
+	}	while (n);
+
+	return res;
+}
+var popupMouseenterHandler = function(event){
+	var $this = $(this);
+	$this.parent().find('li').not(this).removeClass('selected');
+	$this.addClass('selected');
+};
 /// We are ready now
 $(document).ready(function () {
 	var url = get_html_var("baseUrl");
@@ -820,16 +976,16 @@ $(document).ready(function () {
 		placeholder: "ui-state-highlight"
 	});
 	
-	// bind common event listeners
-	$("#popup").click(function() {
-		var option = $("#popup option:selected");
-		if (!option.size())
-			return;
-		var id = option.attr("id");
-		$("#edit_" + id).val(option.html()).attr("lat", option.attr("lat")).attr("lon", option.attr("lon")).attr("data", option.attr("data"));
-		$(this).parent().hide();
-		update_map();
-	});
+	$('#popup').on({
+		'mouseenter.popup': popupMouseenterHandler,
+		'click.popup': function(event){
+			var $this = $(this);
+			var id = $this.attr("id");
+			$("#edit_" + id).val($this.text()).attr("lat", $this.attr("lat")).attr("lon", $this.attr("lon")).attr("data", $this.attr("data"));
+			$this.closest('#popup_holder').hide();
+			update_map();
+		}
+	}, 'li');
 	// show/hide optimized path
 	$("#show_result").click(function() {
 		if (ordered_path === null)

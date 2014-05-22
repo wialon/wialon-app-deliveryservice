@@ -28,17 +28,17 @@
 		"Active SID",
 		"Base URL",
 		"Host URL",
-        "Language",
-        "Current user"
+		"Language",
+		"Current user"
 	],
 	"language": [
 		"en",
 		"ru",
-        "de"
+		"de"
 	],
-	"build_date": "2014-05-12",
+	"build_date": "2014-05-22",
 	"release_date": "2013-01-27",
-	"version": "1.8",
+	"version": "1.9",
 	"keywords": [
 		"wialon",
 		"wialon-apps",
