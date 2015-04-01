@@ -28,7 +28,7 @@ TRANSLATIONS = {
 	"m": "",
 
 	"weeks": "",
-	
+
 	"Stay duration, min:&nbsp;": "",
 
 	"Speed, km/h:": "",
@@ -41,7 +41,7 @@ TRANSLATIONS = {
 
 	"Snap to roads": "",
 
-	"Routing provider:": "",
+	"Routing and address provider:": "",
 
 	"Calculate": "",
 
@@ -50,19 +50,19 @@ TRANSLATIONS = {
 	"Print": "",
 
 	"Save in Wialon": "",
-	
+
 	"Address": "",
 
 	"Time": "",
 
-	"Interval": "", 
+	"Interval": "",
 
 	"Distance": "",
-	
+
 	"Total:": "",
 
 	"Unable to connect to the server.": "",
-	
+
 	"Error when working with Yandex Maps.": "",
 
 	"Unable to calculate the route: check input data.": "",

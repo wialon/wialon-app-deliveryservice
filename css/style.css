@@ -12,10 +12,15 @@
 
 .title {
 	float: left;
-	margin-left: 15px; 
+	margin-left: 15px;
 	margin-top: 30px;
 	font-size: 22px;
 	color: #797c80;
+}
+
+#help {
+	float: right;
+	margin: 25px 25px 0;
 }
 
 body input[type]:hover {
@@ -83,7 +88,7 @@ body select {
 }
 
 .table_padding {
-	margin: 3px 0px 0px 5px;
+	margin: 3px 0px 0px 9px;
 }
 
 .main-table-wrapper {
@@ -154,9 +159,9 @@ body select {
 	cursor: pointer;
 }
 
-.ui-state-highlight { 
-	height: 100px; 
-	line-height: 1.2em; 
+.ui-state-highlight {
+	height: 100px;
+	line-height: 1.2em;
 	background-color: #ccc;
 }
 

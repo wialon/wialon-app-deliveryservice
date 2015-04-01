@@ -26,14 +26,14 @@
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<meta names="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 	<link rel="stylesheet" type="text/css" href="./css/leaflet.css"/>
-	
+
 	<script src="./js/jquery/jquery-1.11.1.min.js"></script>
 	<script src="./js/jquery/jquery-ui/jquery-ui-1.10.4.custom.min.js"></script>
 	<script src="./js/jquery/jquery.localisation.js"></script>
 	<script src="./js/underscore-min.js"></script>
 	<script src="./js/jquery/printThis.js"></script>
 	<script src="./js/leaflet/leaflet.js"></script>
-	<script src="./js/leaflet/WebGis.leaflet.js"></script>
+	<script src="//apps.wialon.com/plugins/leaflet/webgis/webgis.leaflet.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="./js/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.10.4.custom.css">
 	<link rel="stylesheet" type="text/css" href="./css/style.css">
 	<script src="./js/main.js"></script>
@@ -42,26 +42,29 @@
 <body>
 	<div id="block" style="display: none; position: absolute; top: 70px; left: 0px; width: 485px; height: 525px; z-index: 1; background-color: #000; filter: alpha(opacity=35);-moz-opacity: 0.35; opacity: 0.35;"></div>
 	<div id="block2" style="display: none; position: absolute; top: 70px; left: 0px; width: 485px; height: 525px; z-index: 2;"></div>
-	
+
 	<div style="position: absolute; top: 0px; left: 0px; width: 100%;">
-	  <img style="margin-left: 31px; margin-top: 23px;float:left;" src="img/logo.png"/>
-	  <div id="logo-title" class="title">Delivery service</div>
-	  <div class="clear"></div>
+		<img style="margin-left: 31px; margin-top: 23px;float:left;" src="img/logo.png"/>
+		<div id="logo-title" class="title">Delivery Service</div>
+		<a id="help" target="_blank" href="/docs/en/deliveryservice.html">
+			<img src="img/help.png"/>
+		</a>
+		<div class="clear"></div>
 	</div>
-	
+
 	<div style="position: absolute; background: #e3e3e3; top: 70px; left: 0px; width: 100%; height: 520px;">
-	  
+
 	  <div id="popup_holder" style="position: absolute; top: 0px; left: 0px; max-height: 520px; max-width: 300px; overflow: auto; z-index: 1; background: #C2C2C2; display: none;">
 			<ol id="popup"></ol>
 	  </div>
-	  
+
 	  <div id="main-table-wrapper" class="main-table-wrapper">
 		<table style="width: 480px; height: 500px;">
 		  <tr>
 			<td style="width: 440px; padding-left: 20px; padding-top: 20px; padding-right: 0px">
 			  <table class="main_table">
 				<tr>
-				  <td class="light_font" style="border-bottom: 1px solid #c2c2c2; padding: 5px;">
+				  <td class="light_font" style="border-bottom: 1px solid #c2c2c2; padding: 5px; padding-left: 0;">
 					<I id="main-title"></I>
 				  </td>
 				</tr>
@@ -70,7 +73,7 @@
 					<table>
 					  <tr>
 						<td>
-							<img style="cursor: pointer" id="add_point" onclick="add_new_point()" src="img/add.png"/>
+							<img style="cursor: pointer; margin-left: -5px;" id="add_point" onclick="add_new_point()" src="img/add.png"/>
 						</td>
 						<td id="add-address-title" style="width: 420px;"></td>
 						<td align="right">
@@ -83,13 +86,13 @@
 				<tr style="height: 200px;">
 				  <td style="border-top: 1px solid #FFFFFF; border-bottom: 1px solid #c2c2c2">
 					<div style="width: 460px; height: 200px; overflow: auto;">
-						<ul id="points">
+						<ul id="points" style="margin-left: -5px;">
 						</ul>
 					</div>
 				  </td>
 				</tr>
 				<tr>
-				  <td style="border-top: 1px solid #FFFFFF; border-bottom: 1px solid #c2c2c2; padding: 0px !important;" class="light_font">		
+				  <td style="border-top: 1px solid #FFFFFF; border-bottom: 1px solid #c2c2c2; padding: 0px !important;" class="light_font">
 					<div style="width: 440px; height: 150px; margin: 5px 0px 5px 0px;">
 						<div>
 							<span id="speed-input-title"></span>
@@ -109,11 +112,14 @@
 						<input type="checkbox" id="road_lock"/>
 						<span id="snap-roads-title"><span>
 						</div>
-						<div style="margin: 5px 0px 0px 0px; text-align: middle;">
+						<div style="margin: 5px 0px 0px 0px; text-align: middle; position: absolute; top: 25px;">
 							<span id="routing-provider-title"></span>
 							<!--input type="radio" name="provider" value="google" checked/>
 							<span>Google</span-->
-							<input type="radio" name="provider"  style="margin-left:10px;white-space:nowrap;" value="yandex" checked />
+							<input type="radio" name="provider"  style="margin-left:10px;white-space:nowrap;" value="gurtam" checked=""/>
+							<span>Gurtam</span>
+
+							<input type="radio" name="provider"  style="margin-left:10px;white-space:nowrap;" value="yandex" />
 							<span>Yandex</span>
 						</div>
 						<div style="margin: 10px 0px 5px 0px" align="right">
@@ -127,17 +133,17 @@
 		  </tr>
 		</table>
 	  </div>
-	  
+
 	  <div id="map_div" class="map"></div>
 	  <div class="clear"></div>
 	</div>
-	
+
 	<img id="show_instruments" style="cursor: pointer; display: none; position: absolute; top: 125px; left:10px;" onclick="show_hide_instruments()" src="img/arr-right.png"/>
-	
+
 	<div style="position: absolute; background: #ededed; top: 565px; left: 0px; width: 100%; min-height: 30px;" class="dark_font">
-		<div style="padding-left: 20px;" id="result"></div>
+		<div style="padding-left: 14px;" id="result"></div>
 		<div style="padding-left: 20px; width: 425px;">
-			<table id="result_control" class="table_padding">
+			<table id="result_control" class="table_padding" style="margin-left: 0px;">
 				<tr>
 					<td>
 						<input type="checkbox" id="show_result" checked>
@@ -155,7 +161,7 @@
 			</table>
 		</div>
 	</div>
-	
+
 	<!-- Templates -->
 	<script type="text/template" id="new-poin-template">
 	  <li id="row_<%= id %>" mode="map" lat="0" lon="0">
@@ -418,7 +424,7 @@
 		</div>
 	  </li>
 	</script>
-	
+
 	<script type="text/template" id="table-result-template">
 	  <table class="result_table">
 		<thead>
@@ -451,6 +457,6 @@
 	  </tr>
 	</script>
 	<!-- End templates -->
-	
+
   </body>
 </html>

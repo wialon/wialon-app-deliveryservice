@@ -20,7 +20,7 @@ TRANSLATIONS = {
 	"Fri": "Fr",
 
 	"Sat": "Sa",
-	
+
 	"Sun": "So",
 
 	"h": "hh",
@@ -28,7 +28,7 @@ TRANSLATIONS = {
 	"m": "m",
 
 	"weeks": "Wochen",
-	
+
 	"Stay duration, min:&nbsp;": "Aufenthaltsdauer, min:&nbsp;",
 
 	"Speed, km/h:": "Geschw., Km/h:",
@@ -41,7 +41,7 @@ TRANSLATIONS = {
 
 	"Snap to roads": "Auf Strassen binden",
 
-	"Routing provider:": "Routingprovider",
+	"Routing and address provider:": "",
 
 	"Calculate": "Berechnen",
 
@@ -50,19 +50,19 @@ TRANSLATIONS = {
 	"Print": "Drucken",
 
 	"Save in Wialon": "In Wialon speichern",
-	
+
 	"Address": "Adresse",
 
 	"Time": "Zeit",
 
-	"Interval": "Interval", 
+	"Interval": "Interval",
 
 	"Distance": "Entfernung",
-	
+
 	"Total:": "Gesamt",
 
 	"Unable to connect to the server.": "Kann nicht mit Server verbinden",
-	
+
 	"Error when working with Yandex Maps.": "Fehler bei der Bearbeitung durch Yandex Maps",
 
 	"Unable to calculate the route: check input data.": "Kann die Route niche berechnen, bitte Daten ueberpruefen",

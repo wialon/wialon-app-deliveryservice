@@ -34,6 +34,10 @@ var flagMeasure = null;
 var firstDay = null;
 /// set AM/PM format time: false - 24h, true - 12h
 var timeFormatAMPM = false;
+// all points
+var conutsPoints = 0;
+// number points which were got
+var leng = 0;
 
 /// Execute callback
 function exec_callback(id) {
@@ -142,7 +146,7 @@ function fetchAddress(addressDetails) {
 							if (addressDetails.Country.AdministrativeArea.SubAdministrativeArea.Locality.DependentLocality.DependentLocality) {
 								addr.region = addressDetails.Country.AdministrativeArea.SubAdministrativeArea.Locality.DependentLocality.DependentLocality.DependentLocalityName;
 							}
-						}			
+						}
 					}
 					else if (addressDetails.Country.AdministrativeArea.SubAdministrativeArea.Premise) {
 						addr.city = addressDetails.Country.AdministrativeArea.SubAdministrativeArea.PremiseName;
@@ -287,8 +291,11 @@ function process_geozone(name, id) {
 	}
 	show_popup(html, id);
 }
+
+var chachePopUp = {};
 /// Show popup menu
 function show_popup(html, id) {
+	chachePopUp[id] = html;
 	var $popup = $("#popup");
 	if (!html) {
 		$popup.parent().hide();
@@ -328,12 +335,21 @@ function init_sdk() {
 		return;
 	var user = get_html_var("user") || "";
 	wialon.core.Session.getInstance().initSession(url);
-	wialon.core.Session.getInstance().duplicate(get_html_var("sid"), user, true, login);
+
+	var sid = get_html_var("sid");
+	var authHash = get_html_var("authHash");
+
+	if (authHash) {
+		wialon.core.Session.getInstance().loginAuthHash(authHash, login);
+	} else if (sid) {
+		wialon.core.Session.getInstance().duplicate(sid, user, true, login);
+	}
 }
 /// Init map
 function init_map() {
 	var gis_url = wialon.core.Session.getInstance().getBaseGisUrl();
-	var gurtam = L.tileLayer.webGis(gis_url,{ attribution: "Gurtam Maps",minZoom: 4});
+	var user_id = wialon.core.Session.getInstance().getCurrUser().getId();
+	var gurtam = L.tileLayer.webGis(gis_url,{ attribution: "Gurtam Maps",minZoom: 4, userId: user_id});
 	var osm = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'});
 	var layers = {
 		"Gurtam Maps": gurtam,
@@ -355,7 +371,31 @@ function init_map() {
 			var arr = id.split("_");
 			if (arr.length != 2 || arr[0] != "edit" || $("#row_" + arr[1]).attr("mode") != "map")
 				return;
-			rgeocoding(e.latlng, arr[1]);
+
+			if(provider == 'gurtam'){
+				wialon.util.Gis.getLocations([{lat: e.latlng.lat, lon: e.latlng.lng}], function (code, result) {
+					if (code === 0 && result){
+						var tmp,
+								html = '';
+						for(i=0, len=result.length; i<len; i++) {
+							temp = result[i];
+							params = {
+								label: temp,
+								lon: e.latlng.lng,
+								lat: e.latlng.lat
+							};
+
+							html += "<li data='0' id='" + arr[1] + "' lat='" + params.lat + "' lon='" +params.lon + "'><span>";
+							html += params.label;
+							html += "</span></li>";
+						}
+
+						show_popup(html, arr[1]);
+					}
+				});
+			}
+			else
+				rgeocoding(e.latlng, arr[1]);
 		}
 	});
 
@@ -405,7 +445,7 @@ function add_new_point() {
 	});
 	$("#points").append(html);
 	$("#to_" + id).val("1425");
-	
+
 	var temp = $("#row_"+id);
 	$(temp).find("#delivery-address-title").html($.localise.tr("Delivery address:"));
 	$(temp).find("#deliver-from-title").html($.localise.tr("Deliver from:&nbsp;"));
@@ -418,12 +458,12 @@ function add_new_point() {
 	$(temp).find(".sa-day").html($.localise.tr("Sat"));
 	$(temp).find(".su-day").html($.localise.tr("Sun"));
 	$(temp).find("#stay-duration-title").html($.localise.tr("Stay duration, min:&nbsp;"));
-	
+
 	$(temp).find(".map_div").attr("title", $.localise.tr("Add from map"));
 	$(temp).find(".zone_div").attr("title", $.localise.tr("Add from geofences"));
 	$(temp).find(".poi_div").attr("title", $.localise.tr("Add from POIs"));
 	$(temp).find(".remove_div").attr("title", $.localise.tr("Delete address"));
-	
+
 	$("#remove_" + id).click(function() {
 		var id = $(this).attr("id").substr(7);
 		$("#row_" + id).remove();
@@ -507,6 +547,17 @@ function add_new_point() {
 			e.stopImmediatePropagation();
 			return false;
 		}
+	}).on('click', function(e){
+		e.preventDefault();
+		e.stopPropagation();
+		var id = $(this).attr('id');
+		if( ! id)
+			return;
+
+		id = id.replace('edit_',  '');
+		if(chachePopUp[id]){
+			show_popup(chachePopUp[id], id);
+		}
 	});
 	$("#row_" + id + " div[usage]").click(function() {
 		var id = $(this).attr("id");
@@ -533,12 +584,47 @@ function add_new_point() {
 			check_input(id);
 	});
 }
+
+function geocodingGurtam(value, id){
+	show_popup('', id);
+
+	if(provider == 'gurtam'){
+		wialon.util.Gis.searchByString(value, 0x800, 10, function(code, data) {
+			if (code || !data){
+				return;
+			}
+			var html = '';
+			var i, len, temp, loc, params;
+			for(i=0, len=data.length; i<len; i++) {
+				temp = data[i];
+				if (temp && temp.items && temp.items[0]) {
+					loc = temp.items[0];
+					params = {
+						label: loc.formatted_path,
+						lon: loc.x,
+						lat: loc.y
+					};
+
+					html += "<li data='0' id='" + id + "' lat='" + params.lat + "' lon='" +params.lon + "'><span>";
+					html += params.label;
+					html += "</span></li>";
+				}
+			}
+
+			show_popup(html, id);
+		});
+	}
+}
 /// Check input
 function check_input(id) {
 	var value = $("#edit_" + id).val();
 	var mode = $("#row_" + id).attr("mode");
-	if (mode == "map")
-		geocoding(value, id);
+	if (mode == "map"){
+		if(provider == 'gurtam')
+			geocodingGurtam(value, id);
+		else
+			geocoding(value, id);
+	}
 	else if (mode == "poi")
 		process_poi(value, id);
 	else if (mode == "zone")
@@ -658,7 +744,7 @@ function show_optimized_path(data) {
 	var result_template = _.template($("#table-result-template").html());
 	var html = result_template({});
 	$("#result").html(html);
-	
+
 	var row_template = _.template($("#row-result-template").html());
 	var prev_point = 0, platlon = null; var dtotal = 0; ycoords = [];
 	for (i = 0; i < data.order.length; i++) {
@@ -667,7 +753,7 @@ function show_optimized_path(data) {
 		var lon = $(inputs.get(data.order[i].id)).attr("lon");
 		var pt = L.latLng(lat, lon);
 		coords.push(pt);
-		
+
 		var distance = null;
 		/*if (provider === "google" && i && directions_data.directions[prev_point][data.order[i].id]) {
 			directions_data.renderers.push(new google.maps.DirectionsRenderer({
@@ -681,15 +767,16 @@ function show_optimized_path(data) {
 			var ttemp = directions_data.directions[prev_point][data.order[i].id].routes[0].legs[0].distance.value;
 			dtotal += ttemp;
 			distance = humanize_distance(ttemp);
-		} else*/ if (provider === "yandex" && i && directions_data.directions[prev_point][data.order[i].id]) {
-			var ltemp = 0;
-			var tdata = directions_data.directions[prev_point][data.order[i].id];
+		} else*/
+		var ltemp = 0;
+		var tdata = directions_data.directions[prev_point][data.order[i].id];
+		if ((provider === "yandex" || "gurtam") && i && directions_data.directions[prev_point][data.order[i].id]) {
 			if (platlon !== null) {
 				for (var j=0, len=tdata.length; j<len; j++) {
 					ycoords.push(L.latLng(tdata[j][0], tdata[j][1]));
 					if (j > 0) {
 						ltemp += wialon.util.Geometry.getDistance(tdata[j][0], tdata[j][1],
-																tdata[j-1][0], tdata[j-1][1]);
+						tdata[j-1][0], tdata[j-1][1]);
 					}
 				}
 				dtotal += ltemp;
@@ -707,7 +794,7 @@ function show_optimized_path(data) {
 				distance = " --- ";
 			}
 		}
-		
+
 		$("#result-tbody").append(row_template({
 			index: (i+1),
 			lat: lat, lon: lon,
@@ -724,7 +811,7 @@ function show_optimized_path(data) {
 		$(tmp).find("#interval-col-name").html($.localise.tr("Interval"));
 		$(tmp).find("#distance-col-name").html($.localise.tr("Distance"));
 		$(tmp).find("#total-col-name").html($.localise.tr("Total:"));
-		
+
 		platlon = [lat, lon];
 		prev_point = data.order[i].id;
 	}
@@ -744,13 +831,15 @@ function calc_distances(coords, callback) {
 	var matrix = [], i = 0;
 	for (i = 0; i < directions_data.renderers.length; i++)
 		map.removeLayer(directions_data.renderers[i]);
-		
+
 	directions_data.renderers = [];
 	directions_data.directions = [];
 	var lock = $("#road_lock").prop("checked") ? true : false;
 	points_pending = coords.length * coords.length - coords.length;
 	points_pending_total = points_pending;
-	
+	conutsPoints = coords.length*coords.length-coords.length;
+	leng = 0;
+
 	for (i = 0; i < coords.length; i++) {
 		matrix.push([]);
 		directions_data.directions.push([]);
@@ -761,13 +850,21 @@ function calc_distances(coords, callback) {
 				continue;
 			if (lock) {
 				var options = {};
-				if (provider === "yandex") {
-					var points = [];
+				var points = [];
+				if(provider){
 					options.avoidTrafficJams = false;
 					options.mapStateAutoApply = true;
 					points.push([coords[i].lat, coords[i].lng]);
 					points.push([coords[j].lat, coords[j].lng]);
-					qx.lang.Function.bind(ydirections, this, points, options, i, j, matrix, speed, callback)();
+
+					switch(provider){
+						case "yandex":
+							qx.lang.Function.bind(ydirections, this, points, options, i, j, matrix, speed, callback)();
+							break;
+						case "gurtam":
+							qx.lang.Function.bind(gDirections, this, points, options, i, j, matrix, speed, callback)();
+							break;
+					}
 				}
 			} else {
 				matrix[i][j] = parseInt(wialon.util.Geometry.getDistance(coords[i].lat, coords[i].lng, coords[j].lat, coords[j].lng) / 1000 / speed * 60, 10);
@@ -776,6 +873,29 @@ function calc_distances(coords, callback) {
 	}
 	if (!lock)
 		callback(matrix);
+}
+/// Calculate directions in gurtam way
+function gDirections(points, options, x, y, matrix, speed, callback) {
+	wialon.util.Gis.getRoute(points[0][0], points[0][1], points[1][0], points[1][1], 1, function(error, response){
+		if (error)
+			return;
+
+		var duration = Math.floor(response.duration.value/60);
+		matrix[x][y] = duration;
+		leng += 1;
+		set_progress(parseInt(leng*100/conutsPoints), 10);
+
+		var tmp_points = [];
+		_.forEach(response.points, function(o){
+			tmp_points.push([o.lat, o.lon]);
+		});
+		directions_data.directions[x][y] = tmp_points;
+
+		// check points
+		if(leng == conutsPoints){
+			callback(matrix);
+		}
+	});
 }
 
 /// Calculate directions in yandex way
@@ -839,7 +959,7 @@ function ltranlate () {
 	$("#lock-last-title").html($.localise.tr("Lock last address"));
 	$("#stick-schedule-title").html($.localise.tr("Stick to schedule"));
 	$("#snap-roads-title").html($.localise.tr("Snap to roads"));
-	$("#routing-provider-title").html($.localise.tr("Routing provider:"));
+	$("#routing-provider-title").html($.localise.tr("Routing and address provider:"));
 	$("#calc-btn").val($.localise.tr("Calculate"));
 	$("#showin-map-title").html($.localise.tr("Show on map"));
 	$("#print").val($.localise.tr("Print"));
@@ -910,7 +1030,7 @@ var formatAddress = (function(){
 	var getWialonAddressFormat = function(){
 		var addrFmt = wialon.core.Session.getInstance().getCurrUser().getCustomProperty('us_addr_fmt', '').split('_'),
 			geocodingFlags = addrFmt.length > 1 ? Number(addrFmt[0]) >> 16 : 5349; // 5349 << 16 is binary 3 bit 1, 2, 3, 4, 5
-		
+
 		format = splitByBits(geocodingFlags, 3);
 	};
 
@@ -962,6 +1082,10 @@ $(document).ready(function () {
 	LANG = get_html_var("lang");
 	if ((!LANG) || ($.inArray(LANG, ["en", "ru", "de"]) == -1))
 		LANG = "en";
+	if (LANG == "ru") {
+		$("#help").attr("href", "/docs/ru/deliveryservice.html");
+	}
+
 	$.localise('lang/', {language: LANG});
 
 	load_script(url, init_sdk);
@@ -975,7 +1099,7 @@ $(document).ready(function () {
 		},
 		placeholder: "ui-state-highlight"
 	});
-	
+
 	$('#popup').on({
 		'mouseenter.popup': popupMouseenterHandler,
 		'click.popup': function(event){
@@ -986,6 +1110,12 @@ $(document).ready(function () {
 			update_map();
 		}
 	}, 'li');
+
+	$(window).on('click', function(){
+		var $popup = $('#popup_holder');
+		if($popup.css('display') !== 'none')
+			$popup.hide();
+	});
 	// show/hide optimized path
 	$("#show_result").click(function() {
 		if (ordered_path === null)
@@ -1070,7 +1200,7 @@ $(document).ready(function () {
 		}
 	});
 
-	provider = "yandex";
+	provider = "gurtam";
 	$("[name='provider']").change(function(event) {
 		provider = $(this).val();
 	});

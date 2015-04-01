@@ -19,9 +19,9 @@ TRANSLATIONS = {
 	"Fri": "Пт",
 
 	"Sat": "Сб",
-	
+
 	"Sun": "Вс",
-	
+
 	"h": "ч",
 
 	"m": "м",
@@ -46,7 +46,7 @@ TRANSLATIONS = {
 
 	"Snap to roads": "Привязать к дорогам",
 
-	"Routing provider:": "Служба для вычисления направления:",
+	"Routing and address provider:": "Источник адресов и маршрутизации:",
 
 	"Calculate": "Рассчитать",
 
@@ -60,14 +60,14 @@ TRANSLATIONS = {
 
 	"Time": "Время",
 
-	"Interval": "Интервал", 
+	"Interval": "Интервал",
 
 	"Distance": "Расстояние",
-	
+
 	"Total:": "Итого:",
 
 	"Unable to connect to the server.": "Ошибка подключения к серверу.",
-	
+
 	"Error when working with Yandex Maps.": "Ошибка работы с Yandex Maps.",
 
 	"Unable to calculate the route: check input data.": "Прокладка маршрута невозможна: проверьте вводимые данные.",
@@ -93,7 +93,7 @@ TRANSLATIONS = {
 	"Add from POIs": "Добавить из POI",
 
 	"Delete address": "Удалить адрес",
-	
+
 	"Save": "Сохранить",
 
     "ft": "фт",

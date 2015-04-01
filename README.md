@@ -1,8 +1,8 @@
-# Delivery Service, version 1.9: (May 22, 2014)
+# Delivery Service, version 1.9.2: (March 24, 2015)
 This is WEB application based on Apps from Gurtam (http://apps.wialon.com).
 
 ## Description
-Delivery Service app can be used by courier and other similar services. The application enables to set any number of points (addresses), indicate the expected period of their visiting, and then to build the best route. As the points it is also possible to use the geofences and POI, available to the user.  
+Delivery Service app can be used by courier and other similar services. The application enables to set any number of points (addresses), indicate the expected period of their visiting, and then to build the best route. As the points it is also possible to use the geofences and POI, available to the user.
 From the additional parameters while building the route it’s possible to use the approximate average driving speed and the time, spent in the point.
 
 ## License
@@ -15,7 +15,7 @@ From the additional parameters while building the route it’s possible to use t
  * URL params: Active SID, Base URL, Host URL, Language, Current user
 
 ## Quick start
-Apps activation through the management system: http://docs.gurtam.com/en/hosting/cms/apps/apps  
+Apps activation through the management system: http://docs.gurtam.com/en/hosting/cms/apps/apps
 Working with applications in the GPS tracking system: http://docs.gurtam.com/en/hosting/user/apps/apps
 
 ## Release History
@@ -60,3 +60,9 @@ Working with applications in the GPS tracking system: http://docs.gurtam.com/en/
 - redesign address dropdown, add support of Up/Down keyboard keys
 - fix error on empty address route calculation
 - change app logo
+
+ * v1.9.1 (February 13, 2015)
+- Gurtam Maps Routing added
+
+ * v1.9.2 (March 24, 2015)
+- Gurtam Maps geocoding added
