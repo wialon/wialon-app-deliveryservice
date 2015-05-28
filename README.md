@@ -1,4 +1,4 @@
-# Delivery Service, version 1.9.2: (March 24, 2015)
+# Delivery Service, version 1.9.3: (May 27, 2015)
 This is WEB application based on Apps from Gurtam (http://apps.wialon.com).
 
 ## Description
@@ -66,3 +66,6 @@ Working with applications in the GPS tracking system: http://docs.gurtam.com/en/
 
  * v1.9.2 (March 24, 2015)
 - Gurtam Maps geocoding added
+
+ * v1.9.3 (May 27, 2015)
+- changed calculation logic for Gurtam Maps
